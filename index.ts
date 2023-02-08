@@ -141,7 +141,12 @@ mongoose.connection.on("open", async () => {
     );
     doc.coverUrl = mal_data.picture;
     doc.studios = new Types.DocumentArray(
-      mal_data.studios.filter((e) => e !== "None found, add some")
+      mal_data.studios
+        .filter((e) => e !== "None found, add some")
+        .map((e, ind) => ({
+          name: e,
+          id: ind,
+        }))
     );
 
     await doc.save();
