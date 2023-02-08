@@ -115,24 +115,10 @@ async function createAnime(d: any, id) {
 mongoose.connection.on("open", () => {
   console.log("Connected to db 2.");
 
-  for (let i = 1; i <= 100; i++) {
+  for (let i = 1; i <= 9000; i += 10) {
     let requests = [];
     for (let j = 1; j <= 10; j++) {
-      console.log(i, j, j * i);
-      requests.push(
-        axios({
-          method: "GET",
-          url: details_url,
-          headers: headers,
-          params: {
-            anime_id: j * i,
-            fetch_episodes: "Yes",
-            more_info: "Yes",
-          },
-        }).catch((err: AxiosError) =>
-          console.log("No anime with the id: " + err.request.path)
-        )
-      );
+      console.log(i, j, j + i);
     }
     axios
       .all(requests)
