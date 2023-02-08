@@ -12,8 +12,8 @@ server.listen(3000, () => {
 import axios from "axios";
 const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 import mongoose from "./src/db/Database.js";
-import Inc from "mongoose-sequence";
 import { Schema, model } from "mongoose";
+import Inc from "mongoose-sequence";
 const AutoIncrement = Inc(mongoose);
 const T_Schema = new Schema({
   name: { type: String, default: null },
@@ -43,6 +43,7 @@ const Recommendation = new Schema({
   coverUrl: { type: String, default: null },
 });
 const AnimeSchema = new Schema({
+  id: { type: Number, default: null, sparse: true },
   mal_id: { type: Number, default: null },
   ani_id: { type: Number, default: null },
   as_id: { type: Number, default: null },
@@ -94,7 +95,6 @@ async function createAnime(d) {
   });
   await anime.save();
 }
-let id = 0;
 mongoose.connection.on("open", async () => {
   console.log("Connected to db 2.");
   for (let i = 78; i <= 9000; i += 10) {
@@ -112,12 +112,7 @@ mongoose.connection.on("open", async () => {
             more_info: "Yes",
           },
         }).catch((err) =>
-          // @ts-ignore
-          console.log(
-            // @ts-ignore
-            `No anime with the id[${err?.response?.data?.status}]: ` +
-              err.request.path
-          )
+          console.log("No anime with the id: " + err.request.path)
         )
       );
     }
@@ -126,11 +121,8 @@ mongoose.connection.on("open", async () => {
       .then((responses) => {
         responses.forEach(async (response) => {
           if (response?.data?.hasOwnProperty("response")) {
-            console.log(
-              `Got anime[${id}]: ` + response?.data?.response.anime_name
-            );
+            console.log("Got anime: " + response?.data?.response.anime_name);
             await createAnime(response?.data?.response);
-            id++;
           }
         });
       })
