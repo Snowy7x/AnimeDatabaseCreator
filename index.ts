@@ -125,7 +125,7 @@ mongoose.connection.on("open", async () => {
     doc.description_en = mal_data.synopsis;
     doc.mal_id = mal_data.id;
     doc.duration = mal_data.duration;
-    doc.source = mal_data.source;
+    doc.source = mal_data.source != "Unknown" ? mal_data.source : doc.source;
     doc.score = parseFloat(mal_data.score);
     doc.scored_by = parseInt(
       mal_data.scoreStats
@@ -140,7 +140,9 @@ mongoose.connection.on("open", async () => {
       }))
     );
     doc.coverUrl = mal_data.picture;
-    doc.studios = new Types.DocumentArray(mal_data.studios);
+    doc.studios = new Types.DocumentArray(
+      mal_data.studios.filter((e) => e !== "None found, add some")
+    );
 
     await doc.save();
   }
