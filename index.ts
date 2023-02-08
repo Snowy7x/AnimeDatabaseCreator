@@ -79,18 +79,6 @@ const AnimeSchema = new Schema({
   recommended: [Recommendation],
 });
 
-AnimeSchema.pre("save", function (next) {
-  // Only increment when the document is new
-  if (this.isNew) {
-    AnimeModal.count().then((res) => {
-      this.id = res; // Increment count
-      next();
-    });
-  } else {
-    next();
-  }
-});
-
 const AnimeModal = model("Anime", AnimeSchema);
 
 const headers = {
@@ -98,8 +86,9 @@ const headers = {
   "Client-Secret": "7befba6263cc14c90d2f1d6da2c5cf9b251bfbbd",
 };
 
-async function createAnime(d: any) {
+async function createAnime(d: any, id) {
   const anime = new AnimeModal({
+    id: id,
     as_id: d.anime_id,
 
     name: d.anime_name,
@@ -159,7 +148,8 @@ mongoose.connection.on("open", async () => {
             console.log(
               `Got anime[${id}]: ` + response?.data?.response.anime_name
             );
-            await createAnime(response?.data?.response);
+            await createAnime(response?.data?.response, id);
+            id++;
           }
         });
       })
