@@ -13,7 +13,7 @@ async function getAnimeByName(animeName) {
             });
         }
         catch (err) {
-            return {};
+            return null;
         }
     }
 }

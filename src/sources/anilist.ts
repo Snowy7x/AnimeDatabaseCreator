@@ -1,7 +1,7 @@
-import anilist from "anilist-node";
+import anilist, { AnimeEntry } from "anilist-node";
 const Anilist = new anilist();
 
-async function getAnimeByName(animeName: string): Promise<any> {
+async function getAnimeByName(animeName: string): Promise<AnimeEntry> {
   try {
     return await Anilist.search("anime", animeName, 1, 1).then(
       async (re: any) => {
@@ -16,7 +16,7 @@ async function getAnimeByName(animeName: string): Promise<any> {
         }
       );
     } catch (err) {
-      return {};
+      return null;
     }
   }
 }
