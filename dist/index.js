@@ -13,7 +13,7 @@ const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 import mongoose from "./src/db/Database.js";
 import { Schema, Types, model } from "mongoose";
 import Inc from "mongoose-sequence";
-import { getAnimeByNameWithEpisodes } from "./src/sources/myanimelist";
+import { getAnimeByNameWithEpisodes } from "./src/sources/myanimelist.js";
 const AutoIncrement = Inc(mongoose);
 const T_Schema = new Schema({
   name: { type: String, default: null },
