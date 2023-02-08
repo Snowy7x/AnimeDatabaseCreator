@@ -7,7 +7,7 @@ async function getAnimeByName(animeName: string): Promise<AnimeEntry> {
   console.log(i);
   if (i >= 30) {
     console.log("Sleeping for 10 seconds");
-    sleep(10000);
+    await sleep(10000);
   }
   i++;
   try {
