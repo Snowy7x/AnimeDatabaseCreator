@@ -96,38 +96,41 @@ async function createAnime(d) {
   await anime.save();
 }
 mongoose.connection.on("open", async () => {
-  let promises = [];
   for await (const doc of AnimeModal.find()) {
     await UpdateAnime(doc);
   }
 });
 async function UpdateAnime(doc) {
-  await getAnimeByName(doc.name).then(async (mal_data) => {
-    if (mal_data === null) return console.log("Anime not found: " + doc.name);
-    if (mal_data.id === null) mal_data = await getAnimeByName(doc.name);
-    console.log(`Got anime[${doc.id} - ${mal_data.id}]: ${doc.name}`);
-    doc.description_en = mal_data.description;
-    doc.mal_id = mal_data.idMal;
-    doc.ani_id = mal_data.id;
-    doc.duration = mal_data.duration;
-    doc.source = mal_data.source;
-    doc.score = mal_data.averageScore;
-    doc.trailer = mal_data.trailer;
-    doc.genres_en = new Types.DocumentArray(
-      mal_data.genres.map((re, ind) => ({
-        id: ind,
-        name: re,
-      }))
-    );
-    doc.coverUrl =
-      mal_data.coverImage.large ?? mal_data.coverImage.medium ?? doc.coverUrl;
-    doc.bannerUr = mal_data.bannerImage;
-    doc.studios = new Types.DocumentArray(
-      mal_data.studios.map((e) => ({
-        name: e.name,
-        id: e.id,
-      }))
-    );
-    await doc.save();
-  });
+  try {
+    await getAnimeByName(doc.name).then(async (mal_data) => {
+      if (mal_data === null) return console.log("Anime not found: " + doc.name);
+      if (mal_data.id === null) mal_data = await getAnimeByName(doc.name);
+      if (mal_data.id === null) return null;
+      console.log(`Got anime[${doc.id} - ${mal_data.id}]: ${doc.name}`);
+      doc.description_en = mal_data.description;
+      doc.mal_id = mal_data.idMal;
+      doc.ani_id = mal_data.id;
+      doc.duration = mal_data.duration;
+      doc.source = mal_data.source;
+      doc.score = mal_data.averageScore;
+      doc.trailer = mal_data.trailer;
+      doc.genres_en = new Types.DocumentArray(
+        mal_data.genres?.map((re, ind) => ({
+          id: ind,
+          name: re,
+        }))
+      );
+      doc.coverUrl = mal_data.coverImage.large;
+      doc.bannerUr = mal_data.bannerImage;
+      doc.studios = new Types.DocumentArray(
+        mal_data.studios?.map((e) => ({
+          name: e.name,
+          id: e.id,
+        }))
+      );
+      await doc.save();
+    });
+  } catch (e) {
+    console.log("Could not get anim with id: " + doc.id);
+  }
 }
