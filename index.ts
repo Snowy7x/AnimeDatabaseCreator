@@ -11,10 +11,12 @@ server.listen(3000, () => {
 }); */
 
 import axios, { AxiosError } from "axios";
-import { getAnime } from "./src/sources/animeslayer";
 const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 import mongoose from "./src/db/Database";
+import Inc from "mongoose-sequence";
 import { Schema, model } from "mongoose";
+
+const AutoIncrement = Inc(mongoose);
 
 const T_Schema = new Schema({
   name: { type: String, default: null },
@@ -39,7 +41,7 @@ const Relation = new Schema({
 });
 
 const Recommendation = new Schema({
-  id: { type: Number, default: null, unique: true },
+  id: { type: Number, default: null },
   mal_id: { type: Number, default: null },
   ani_id: { type: Number, default: null },
   as_id: { type: Number, default: null },
@@ -48,7 +50,6 @@ const Recommendation = new Schema({
 });
 
 const AnimeSchema = new Schema({
-  id: { type: Number, default: 0 },
   mal_id: { type: Number, default: null },
   ani_id: { type: Number, default: null },
   as_id: { type: Number, default: null },
@@ -79,39 +80,7 @@ const AnimeSchema = new Schema({
   recommended: [Recommendation],
 });
 
-const counterSchema = new Schema({
-  _id: { type: String, required: true },
-  seq: { type: Number, default: 0 },
-});
-
-counterSchema.index({ _id: 1, seq: 1 }, { unique: true });
-
-const counterModel = mongoose.model("counter", counterSchema);
-
-const autoIncrementModelID = function (modelName, doc, next) {
-  counterModel.findByIdAndUpdate(
-    // ** Method call begins **
-    modelName, // The ID to find for in counters model
-    { $inc: { seq: 1 } }, // The update
-    { new: true, upsert: true }, // The options
-    function (error, counter) {
-      // The callback
-      if (error) return next(error);
-
-      doc.id = counter.seq;
-      next();
-    }
-  ); // ** Method call ends **
-};
-
-AnimeSchema.pre("save", function (next) {
-  if (!this.isNew) {
-    next();
-    return;
-  }
-
-  autoIncrementModelID("Anime", this, next);
-});
+AnimeSchema.plugin(AutoIncrement, { inc_field: "id" });
 
 const AnimeModal = model("Anime", AnimeSchema);
 
@@ -122,7 +91,6 @@ const headers = {
 
 async function createAnime(d: any) {
   const anime = new AnimeModal({
-    id: id,
     as_id: d.anime_id,
 
     name: d.anime_name,
@@ -150,7 +118,7 @@ let id = 0;
 mongoose.connection.on("open", async () => {
   console.log("Connected to db 2.");
 
-  for (let i = 0; i <= 9000; i += 10) {
+  for (let i = 78; i <= 9000; i += 10) {
     let requests = [];
     for (let j = 1; j <= 10; j++) {
       console.log(i, j, j + i);
