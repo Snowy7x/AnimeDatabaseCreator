@@ -121,6 +121,7 @@ mongoose.connection.on("open", async () => {
   console.log("Connected to db 2.");
   for await (const doc of AnimeModal.find()) {
     let mal_data = await getAnimeByNameWithEpisodes(doc.name);
+    console.log(`Got anime[${doc.id} - ${mal_data.mal_id}]: ${doc.name}`);
     doc.description_en = mal_data.synopsis;
     doc.mal_id = mal_data.mal_id;
     doc.duration = mal_data.duration;
