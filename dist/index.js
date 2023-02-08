@@ -113,8 +113,8 @@ mongoose.connection.on("open", async () => {
       }))
     );
     doc.coverUrl =
-      mal_data.images?.jpg[0].maximum_image_url ??
-      mal_data.images?.webp[0].maximum_image_url;
+      mal_data.images.jpg.maximum_image_url ??
+      mal_data.images.webp.maximum_image_url;
     doc.studios = new Types.DocumentArray(
       mal_data.studios.map((re) => ({
         id: re.mal_id,
