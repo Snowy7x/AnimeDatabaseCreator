@@ -165,7 +165,9 @@ mongoose.connection.on("open", async () => {
             more_info: "Yes",
           },
         }).catch((err: AxiosError) =>
+          // @ts-ignore
           console.log(
+            // @ts-ignore
             `No anime with the id[${err?.response?.data?.status}]: ` +
               err.request.path
           )
