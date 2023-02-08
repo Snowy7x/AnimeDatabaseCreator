@@ -105,12 +105,15 @@ const autoIncrementModelID = function (modelName, doc, next) {
 };
 
 AnimeSchema.pre("save", function (next) {
-  if (!this.isNew) {
+  // Only increment when the document is new
+  if (this.isNew) {
+    AnimeModal.count().then((res) => {
+      this.id = res; // Increment count
+      next();
+    });
+  } else {
     next();
-    return;
   }
-
-  autoIncrementModelID("Anime", this, next);
 });
 
 const AnimeModal = model("Anime", AnimeSchema);
