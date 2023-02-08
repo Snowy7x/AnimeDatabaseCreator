@@ -122,7 +122,8 @@ async function UpdateAnime(doc) {
         name: re,
       }))
     );
-    doc.coverUrl = mal_data.coverImage;
+    doc.coverUrl =
+      mal_data.coverImage.large ?? mal_data.coverImage.medium ?? doc.coverUrl;
     doc.bannerUr = mal_data.bannerImage;
     doc.studios = new Types.DocumentArray(
       mal_data.studios.map((e) => ({
