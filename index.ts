@@ -118,9 +118,18 @@ async function createAnime(d: any) {
 }
 
 mongoose.connection.on("open", async () => {
-  console.log("Connected to db 2.");
+  let promises = [];
   for await (const doc of AnimeModal.find()) {
-    let mal_data = await getAnimeByName(doc.name);
+    promises.push(UpdateAnime(doc));
+    if (promises.length >= 10) {
+      await Promise.all(promises);
+      promises = [];
+    }
+  }
+});
+
+async function UpdateAnime(doc) {
+  await getAnimeByName(doc.name).then(async (mal_data) => {
     console.log(`Got anime[${doc.id} - ${mal_data.id}]: ${doc.name}`);
     doc.description_en = mal_data.synopsis;
     doc.mal_id = mal_data.id;
@@ -150,5 +159,5 @@ mongoose.connection.on("open", async () => {
     );
 
     await doc.save();
-  }
-});
+  });
+}
