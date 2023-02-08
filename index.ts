@@ -86,8 +86,9 @@ const headers = {
   "Client-Secret": "7befba6263cc14c90d2f1d6da2c5cf9b251bfbbd",
 };
 
-function createAnime(d: any) {
+async function createAnime(d: any, id) {
   const anime = new AnimeModal({
+    id: id,
     as_id: d.anime_id,
 
     name: d.anime_name,
@@ -108,7 +109,7 @@ function createAnime(d: any) {
       id: d.anime_genre_ids.split(", ")[i],
     })),
   });
-  anime.save();
+  await anime.save();
 }
 
 mongoose.connection.on("open", () => {
@@ -136,15 +137,17 @@ mongoose.connection.on("open", () => {
     axios
       .all(requests)
       .then((responses) => {
-        responses.forEach((response) => {
+        let id = 0;
+        responses.forEach(async (response) => {
           if (response?.data?.hasOwnProperty("response")) {
             console.log("Got anime: " + response?.data?.response.anime_name);
-            createAnime(response?.data?.response);
+            await createAnime(response?.data?.response, id);
+            id++;
           }
         });
       })
       .catch((err) => {
-        console.log("Error");
+        console.log("Error: " + err.message);
       });
   }
 });
