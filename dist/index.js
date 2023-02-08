@@ -13,7 +13,7 @@ const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 import mongoose from "./src/db/Database.js";
 import { Schema, Types, model } from "mongoose";
 import Inc from "mongoose-sequence";
-import { getAnimeByNameWithEpisodes } from "./src/sources/myanimelist.js";
+import { getAnimeByName } from "./src/sources/mal.js";
 const AutoIncrement = Inc(mongoose);
 const T_Schema = new Schema({
   name: { type: String, default: null },
@@ -98,29 +98,27 @@ async function createAnime(d) {
 mongoose.connection.on("open", async () => {
   console.log("Connected to db 2.");
   for await (const doc of AnimeModal.find()) {
-    let mal_data = await getAnimeByNameWithEpisodes(doc.name);
-    console.log(`Got anime[${doc.id} - ${mal_data.mal_id}]: ${doc.name}`);
+    let mal_data = await getAnimeByName(doc.name);
+    console.log(`Got anime[${doc.id} - ${mal_data.id}]: ${doc.name}`);
     doc.description_en = mal_data.synopsis;
-    doc.mal_id = mal_data.mal_id;
+    doc.mal_id = mal_data.id;
     doc.duration = mal_data.duration;
     doc.source = mal_data.source;
-    doc.score = mal_data.score;
-    doc.scored_by = mal_data.scored_by;
+    doc.score = parseFloat(mal_data.score);
+    doc.scored_by = parseInt(
+      mal_data.scoreStats
+        .replace("scored by ", "")
+        .replace("scored by ", "")
+        .replace(/,/g, "")
+    );
     doc.genres_en = new Types.DocumentArray(
-      mal_data.genres.map((re) => ({
-        id: re.mal_id,
-        name: re.name,
+      mal_data.genres.map((re, ind) => ({
+        id: ind,
+        name: re,
       }))
     );
-    doc.coverUrl =
-      mal_data.images.jpg.maximum_image_url ??
-      mal_data.images.webp.maximum_image_url;
-    doc.studios = new Types.DocumentArray(
-      mal_data.studios.map((re) => ({
-        id: re.mal_id,
-        name: re.name,
-      }))
-    );
+    doc.coverUrl = mal_data.picture;
+    doc.studios = new Types.DocumentArray(mal_data.studios);
     await doc.save();
   }
 });
