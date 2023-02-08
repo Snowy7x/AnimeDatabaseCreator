@@ -116,7 +116,7 @@ let id = 0;
 mongoose.connection.on("open", async () => {
   console.log("Connected to db 2.");
 
-  for (let i = 1; i <= 9000; i += 10) {
+  for (let i = 0; i <= 9000; i += 10) {
     let requests = [];
     for (let j = 1; j <= 10; j++) {
       console.log(i, j, j + i);
@@ -131,7 +131,7 @@ mongoose.connection.on("open", async () => {
             more_info: "Yes",
           },
         }).catch((err: AxiosError) =>
-          console.log("No anime with the id: " + err.request.path)
+          console.log(`No anime with the id[${err.status}]: ` + err.toJSON())
         )
       );
     }
