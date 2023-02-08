@@ -110,7 +110,7 @@ AnimeSchema.pre("save", function (next) {
     return;
   }
 
-  autoIncrementModelID("activities", this, next);
+  autoIncrementModelID("Anime", this, next);
 });
 
 const AnimeModal = model("Anime", AnimeSchema);
