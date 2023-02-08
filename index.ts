@@ -112,7 +112,7 @@ async function createAnime(d: any, id) {
   await anime.save();
 }
 
-mongoose.connection.on("open", () => {
+mongoose.connection.on("open", async () => {
   console.log("Connected to db 2.");
 
   for (let i = 1; i <= 9000; i += 10) {
@@ -134,7 +134,7 @@ mongoose.connection.on("open", () => {
         )
       );
     }
-    axios
+    await axios
       .all(requests)
       .then((responses) => {
         let id = 0;
@@ -146,8 +146,8 @@ mongoose.connection.on("open", () => {
           }
         });
       })
-      .catch((err) => {
-        console.log("Error: " + err.message);
+      .catch((err: AxiosError) => {
+        console.log("Error: " + err.toJSON());
       });
   }
 });
