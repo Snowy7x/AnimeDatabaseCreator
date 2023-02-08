@@ -14,8 +14,9 @@ import axios, { AxiosError } from "axios";
 import { getAnime } from "./src/sources/animeslayer";
 const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 import mongoose from "./src/db/Database";
-import { Schema, model } from "mongoose";
+import { Schema, Types, model } from "mongoose";
 import Inc from "mongoose-sequence";
+import { getAnimeByNameWithEpisodes } from "./src/sources/myanimelist";
 
 const AutoIncrement = Inc(mongoose);
 
@@ -118,38 +119,30 @@ async function createAnime(d: any) {
 
 mongoose.connection.on("open", async () => {
   console.log("Connected to db 2.");
+  for await (const doc of AnimeModal.find()) {
+    let mal_data = await getAnimeByNameWithEpisodes(doc.name);
+    doc.description_en = mal_data.synopsis;
+    doc.mal_id = mal_data.mal_id;
+    doc.duration = mal_data.duration;
+    doc.source = mal_data.source;
+    doc.score = mal_data.score;
+    doc.scored_by = mal_data.scored_by;
+    doc.genres_en = new Types.DocumentArray(
+      mal_data.genres.map((re) => ({
+        id: re.mal_id,
+        name: re.name,
+      }))
+    );
+    doc.coverUrl =
+      mal_data.images?.jpg[0].maximum_image_url ??
+      mal_data.images?.webp[0].maximum_image_url;
+    doc.studios = new Types.DocumentArray(
+      mal_data.studios.map((re) => ({
+        id: re.mal_id,
+        name: re.name,
+      }))
+    );
 
-  for (let i = 78; i <= 9000; i += 10) {
-    let requests = [];
-    for (let j = 1; j <= 10; j++) {
-      console.log(i, j, j + i);
-      requests.push(
-        axios({
-          method: "GET",
-          url: details_url,
-          headers: headers,
-          params: {
-            anime_id: j + i,
-            fetch_episodes: "Yes",
-            more_info: "Yes",
-          },
-        }).catch((err: AxiosError) =>
-          console.log("No anime with the id: " + err.request.path)
-        )
-      );
-    }
-    await axios
-      .all(requests)
-      .then((responses) => {
-        responses.forEach(async (response) => {
-          if (response?.data?.hasOwnProperty("response")) {
-            console.log("Got anime: " + response?.data?.response.anime_name);
-            await createAnime(response?.data?.response);
-          }
-        });
-      })
-      .catch((err: AxiosError) => {
-        console.log("Error: " + err.toJSON());
-      });
+    await doc.save();
   }
 });

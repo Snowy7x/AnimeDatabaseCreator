@@ -16,10 +16,14 @@ async function getAnimeByName(animeName: string) {
   return await Search(animeName).then((re) => re[0]);
 }
 
-async function getAnimeEpisodesByName(animeName: string) {
+async function getAnimeByNameWithEpisodes(animeName: string) {
   let anime = await getAnimeByName(animeName);
-  return client.getAnimeEpisodeVideos(anime.mal_id).then((re) => re.data);
+  // @ts-ignore
+  anime.episodeVideos = await client
+    .getAnimeEpisodeVideos(anime.mal_id)
+    .then((re) => re.data);
+  return anime;
 }
 
-export { Search, getAnimeByName, getAnimeEpisodesByName };
+export { Search, getAnimeByName, getAnimeByNameWithEpisodes };
 export default client;
