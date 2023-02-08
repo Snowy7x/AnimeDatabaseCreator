@@ -99,7 +99,7 @@ mongoose.connection.on("open", async () => {
   let promises = [];
   for await (const doc of AnimeModal.find()) {
     promises.push(UpdateAnime(doc));
-    if (promises.length >= 10) {
+    if (promises.length >= 20) {
       await Promise.all(promises);
       promises = [];
     }
