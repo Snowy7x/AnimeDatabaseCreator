@@ -142,6 +142,7 @@ async function UpdateAnime(doc) {
         .replace("scored by ", "")
         .replace(/,/g, "")
     );
+    doc.trailer = mal_data.trailer;
     doc.genres_en = new Types.DocumentArray(
       mal_data.genres.map((re, ind) => ({
         id: ind,
