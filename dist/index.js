@@ -103,9 +103,10 @@ mongoose.connection.on("open", async () => {
 async function UpdateAnime(doc) {
   try {
     await getAnimeByName(doc.name).then(async (mal_data) => {
-      if (mal_data === null) return console.log("Anime not found: " + doc.name);
+      if (mal_data === null) mal_data = await getAnimeByName(doc.name);
       if (mal_data.id === null) mal_data = await getAnimeByName(doc.name);
-      if (mal_data.id === null) return null;
+      if (mal_data.id === null)
+        return console.log("Anime not found: " + doc.name);
       console.log(`Got anime[${doc.id} - ${mal_data.id}]: ${doc.name}`);
       doc.description_en = mal_data.description;
       doc.mal_id = mal_data.idMal;
