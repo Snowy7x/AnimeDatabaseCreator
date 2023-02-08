@@ -79,6 +79,40 @@ const AnimeSchema = new Schema({
   recommended: [Recommendation],
 });
 
+const counterSchema = new Schema({
+  _id: { type: String, required: true },
+  seq: { type: Number, default: 0 },
+});
+
+counterSchema.index({ _id: 1, seq: 1 }, { unique: true });
+
+const counterModel = mongoose.model("counter", counterSchema);
+
+const autoIncrementModelID = function (modelName, doc, next) {
+  counterModel.findByIdAndUpdate(
+    // ** Method call begins **
+    modelName, // The ID to find for in counters model
+    { $inc: { seq: 1 } }, // The update
+    { new: true, upsert: true }, // The options
+    function (error, counter) {
+      // The callback
+      if (error) return next(error);
+
+      doc.id = counter.seq;
+      next();
+    }
+  ); // ** Method call ends **
+};
+
+AnimeSchema.pre("save", function (next) {
+  if (!this.isNew) {
+    next();
+    return;
+  }
+
+  autoIncrementModelID("Anime", this, next);
+});
+
 const AnimeModal = model("Anime", AnimeSchema);
 
 const headers = {
@@ -86,7 +120,7 @@ const headers = {
   "Client-Secret": "7befba6263cc14c90d2f1d6da2c5cf9b251bfbbd",
 };
 
-async function createAnime(d: any, id) {
+async function createAnime(d: any) {
   const anime = new AnimeModal({
     id: id,
     as_id: d.anime_id,
@@ -148,7 +182,7 @@ mongoose.connection.on("open", async () => {
             console.log(
               `Got anime[${id}]: ` + response?.data?.response.anime_name
             );
-            await createAnime(response?.data?.response, id);
+            await createAnime(response?.data?.response);
             id++;
           }
         });
