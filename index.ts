@@ -39,7 +39,7 @@ const Relation = new Schema({
 });
 
 const Recommendation = new Schema({
-  id: { type: Number, default: null },
+  id: { type: Number, default: null, unique: true },
   mal_id: { type: Number, default: null },
   ani_id: { type: Number, default: null },
   as_id: { type: Number, default: null },
@@ -48,7 +48,7 @@ const Recommendation = new Schema({
 });
 
 const AnimeSchema = new Schema({
-  id: { type: Number, default: null },
+  id: { type: Number, default: 0 },
   mal_id: { type: Number, default: null },
   ani_id: { type: Number, default: null },
   as_id: { type: Number, default: null },
@@ -77,6 +77,40 @@ const AnimeSchema = new Schema({
   episodes: [EpisodeDetails],
   relations: [Relation],
   recommended: [Recommendation],
+});
+
+const counterSchema = new Schema({
+  _id: { type: String, required: true },
+  seq: { type: Number, default: 0 },
+});
+
+counterSchema.index({ _id: 1, seq: 1 }, { unique: true });
+
+const counterModel = mongoose.model("counter", counterSchema);
+
+const autoIncrementModelID = function (modelName, doc, next) {
+  counterModel.findByIdAndUpdate(
+    // ** Method call begins **
+    modelName, // The ID to find for in counters model
+    { $inc: { seq: 1 } }, // The update
+    { new: true, upsert: true }, // The options
+    function (error, counter) {
+      // The callback
+      if (error) return next(error);
+
+      doc.id = counter.seq;
+      next();
+    }
+  ); // ** Method call ends **
+};
+
+AnimeSchema.pre("save", function (next) {
+  if (!this.isNew) {
+    next();
+    return;
+  }
+
+  autoIncrementModelID("activities", this, next);
 });
 
 const AnimeModal = model("Anime", AnimeSchema);
@@ -131,7 +165,10 @@ mongoose.connection.on("open", async () => {
             more_info: "Yes",
           },
         }).catch((err: AxiosError) =>
-          console.log(`No anime with the id[${err.status}]: ` + err.toJSON())
+          console.log(
+            `No anime with the id[${err?.response?.data?.status}]: ` +
+              err.request.path
+          )
         )
       );
     }
@@ -143,7 +180,7 @@ mongoose.connection.on("open", async () => {
             console.log(
               `Got anime[${id}]: ` + response?.data?.response.anime_name
             );
-            await createAnime(response?.data?.response, id);
+            //await createAnime(response?.data?.response, id);
             id++;
           }
         });
