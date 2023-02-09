@@ -142,6 +142,7 @@ mongoose.connection.on("open", async () => {
         continue;
       const mal_data = await getAnimeByName(keyword);
       if (!mal_data || mal_data.id == null) continue;
+      console.log("Updating anime: " + mal_data.title.userPreferred);
       doc.description_en = mal_data.description;
       doc.mal_id = mal_data.idMal;
       doc.ani_id = mal_data.id;
