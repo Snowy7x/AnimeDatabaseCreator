@@ -11,7 +11,7 @@ server.listen(3000, () => {
 }); */
 
 import axios, { AxiosError } from "axios";
-import { getAnime } from "./src/sources/animeslayer";
+import { getAnime } from "./src/sources/animeslayer.js";
 const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 import mongoose from "./src/db/Database.js";
 import { Document, Schema, Types, model } from "mongoose";
