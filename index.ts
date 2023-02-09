@@ -17,6 +17,7 @@ import mongoose from "./src/db/Database.js";
 import { Document, Schema, Types, model } from "mongoose";
 import Inc from "mongoose-sequence";
 import { getAnimeById, getAnimeByName } from "./src/sources/anilist.js";
+import { error } from "console";
 
 const AutoIncrement = Inc(mongoose);
 
@@ -131,38 +132,37 @@ mongoose.connection.on("open", async () => {
 
 async function UpdateAnime(doc) {
   try {
-    await getAnimeByName(doc.name).then(async (mal_data) => {
-      if (doc.id >= 1) mal_data = await getAnimeById(doc.ani_id);
-      if (mal_data === null) mal_data = await getAnimeByName(doc.name);
-      if (mal_data.id === null) mal_data = await getAnimeByName(doc.name);
-      if (mal_data.id === null)
-        return console.log("Anime not found: " + doc.name);
-      console.log(`Got anime[${doc.id} - ${mal_data.id}]: ${doc.name}`);
-      doc.description_en = mal_data.description;
-      doc.mal_id = mal_data.idMal;
-      doc.ani_id = mal_data.id;
-      doc.duration = mal_data.duration.toString();
-      doc.source = mal_data.source;
-      doc.score = (mal_data.averageScore / 100) * 10;
-      doc.trailer = mal_data.trailer;
-      doc.genres_en = new Types.DocumentArray(
-        mal_data.genres?.map((re, ind) => ({
-          id: ind,
-          name: re,
-        }))
-      );
-      doc.coverUrl = mal_data.coverImage.large;
-      doc.bannerUr = mal_data.bannerImage;
-      doc.studios = new Types.DocumentArray(
-        mal_data.studios?.map((e) => ({
-          name: e.name,
-          id: e.id,
-        }))
-      );
+    let mal_data;
+    if (doc.id >= 1) mal_data = await getAnimeById(doc.ani_id);
+    else mal_data = await getAnimeByName(doc.name);
+    if (mal_data === null) mal_data = await getAnimeByName(doc.name);
+    if (mal_data.id === null) mal_data = await getAnimeByName(doc.name);
+    if (mal_data.id === null)
+      return console.log("Anime not found: " + doc.name);
+    doc.description_en = mal_data.description;
+    doc.mal_id = mal_data.idMal;
+    doc.ani_id = mal_data.id;
+    doc.duration = mal_data.duration.toString();
+    doc.source = mal_data.source;
+    doc.score = (mal_data.averageScore / 100) * 10;
+    doc.trailer = mal_data.trailer;
+    doc.genres_en = new Types.DocumentArray(
+      mal_data.genres?.map((re, ind) => ({
+        id: ind,
+        name: re,
+      }))
+    );
+    doc.coverUrl = mal_data.coverImage.large;
+    doc.bannerUr = mal_data.bannerImage;
+    doc.studios = new Types.DocumentArray(
+      mal_data.studios?.map((e) => ({
+        name: e.name,
+        id: e.id,
+      }))
+    );
 
-      await doc.save();
-    });
+    await doc.save();
   } catch (e) {
-    console.log("Could not get anim with id: " + doc.id);
+    console.log("Error: " + e);
   }
 }
