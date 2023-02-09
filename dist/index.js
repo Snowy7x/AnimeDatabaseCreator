@@ -98,7 +98,7 @@ async function createAnime(d) {
 }
 mongoose.connection.on("open", async () => {
     let promises = [];
-    for await (const doc of AnimeModal.find({ $gt: 1067 })) {
+    for await (const doc of AnimeModal.find({ id: { $gt: 1067 } })) {
         await UpdateAnime(doc);
     }
 });
