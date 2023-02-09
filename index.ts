@@ -128,8 +128,11 @@ mongoose.connection.on("open", async () => {
   console.log(count);
   for await (const doc of docs) {
     let anime = await getAnime(doc.as_id);
+    if (!anime) {
+      console.log("Could not find anime: " + doc.as_id);
+      continue;
+    }
     let keywords = anime.anime_keywords;
-    console.log(keywords);
     if (!keywords || keywords.length <= 1) continue;
     for (const keyword of keywords.split(",")) {
       if (

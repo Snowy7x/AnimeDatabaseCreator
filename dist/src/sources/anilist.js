@@ -3,8 +3,8 @@ const Anilist = new anilist();
 let i = 1;
 async function getAnimeByName(animeName) {
     if (i >= 25) {
-        console.log("Sleeping for 30 seconds");
-        await sleep(30000);
+        console.log("Sleeping for 15 seconds");
+        await sleep(15000);
         i = 0;
     }
     i++;
