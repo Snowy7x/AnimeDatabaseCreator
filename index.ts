@@ -129,17 +129,27 @@ mongoose.connection.on("open", async () => {
   for await (const doc of docs) {
     let anime = await getAnime(doc.as_id);
     let keywords = anime.anime_keywords;
-    if (!keywords || keywords.length <= 0) continue;
-    for (const keyword in keywords.split(",")) {
+    console.log(keywords);
+    if (!keywords || keywords.length <= 1) continue;
+    for (const keyword of keywords.split(",")) {
+      if (
+        !keyword ||
+        keyword.length <= 1 ||
+        keyword === "," ||
+        keyword == " ," ||
+        keyword == ", "
+      )
+        continue;
       const mal_data = await getAnimeByName(keyword);
       if (!mal_data || mal_data.id == null) continue;
+      console.log(mal_data);
       doc.description_en = mal_data.description;
       doc.mal_id = mal_data.idMal;
       doc.ani_id = mal_data.id;
       doc.duration = mal_data.duration.toString();
       doc.source = mal_data.source;
       doc.score = (mal_data.averageScore / 100) * 10;
-      doc.trailer = mal_data.trailer.toString();
+      doc.trailer = mal_data?.trailer?.toString();
       doc.genres_en = new Types.DocumentArray(
         mal_data.genres?.map((re, ind) => ({
           id: ind,
@@ -155,11 +165,14 @@ mongoose.connection.on("open", async () => {
         }))
       );
 
-      doc.keywords = mal_data.synonyms.concat(
-        keywords
-          .split(",")
-          .filter((item) => mal_data.synonyms.indexOf(item) < 0)
-      );
+      doc.keywords = keywords
+        .split(",")
+        .filter((keyword) => keyword.length > 0)
+        .concat(
+          mal_data?.synonyms?.filter(
+            (item) => keywords.split(",").indexOf(item) < 0
+          )
+        );
       break;
     }
     doc.save();
