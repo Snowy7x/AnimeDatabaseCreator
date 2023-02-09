@@ -136,13 +136,12 @@ mongoose.connection.on("open", async () => {
         !keyword ||
         keyword.length <= 1 ||
         keyword === "," ||
-        keyword == " ," ||
-        keyword == ", "
+        keyword === " ," ||
+        keyword === ", "
       )
         continue;
       const mal_data = await getAnimeByName(keyword);
       if (!mal_data || mal_data.id == null) continue;
-      console.log(mal_data);
       doc.description_en = mal_data.description;
       doc.mal_id = mal_data.idMal;
       doc.ani_id = mal_data.id;
