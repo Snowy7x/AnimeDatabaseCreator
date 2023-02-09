@@ -75,6 +75,7 @@ const AnimeSchema = new Schema({
   Rated: { type: String, default: null },
   season: { type: String, default: null },
   status: { type: String, default: null },
+  keywords: { type: [String], default: [] },
 
   genres_ar: [T_Schema],
   genres_en: [T_Schema],
@@ -118,10 +119,51 @@ async function createAnime(d: any) {
   await anime.save();
 }
 
+// 3849 requires update
+
 mongoose.connection.on("open", async () => {
   let promises = [];
-  for await (const doc of AnimeModal.find({ id: { $gt: 1067 } })) {
-    await UpdateAnime(doc);
+  let docs = AnimeModal.find({ ani_id: { $eq: null } });
+  let count = await docs.count();
+  console.log(count);
+  for await (const doc of docs) {
+    let anime = await getAnime(doc.as_id);
+    let keywords = anime.anime_keywords;
+    if (!keywords || keywords.length <= 0) continue;
+    for (const keyword in keywords.split(",")) {
+      const mal_data = await getAnimeByName(keyword);
+      if (!mal_data || mal_data.id == null) continue;
+      doc.description_en = mal_data.description;
+      doc.mal_id = mal_data.idMal;
+      doc.ani_id = mal_data.id;
+      doc.duration = mal_data.duration.toString();
+      doc.source = mal_data.source;
+      doc.score = (mal_data.averageScore / 100) * 10;
+      doc.trailer = mal_data.trailer.toString();
+      doc.genres_en = new Types.DocumentArray(
+        mal_data.genres?.map((re, ind) => ({
+          id: ind,
+          name: re,
+        }))
+      );
+      doc.coverUrl = mal_data.coverImage.large;
+      doc.bannerUr = mal_data.bannerImage;
+      doc.studios = new Types.DocumentArray(
+        mal_data.studios?.map((e) => ({
+          name: e.name,
+          id: e.id,
+        }))
+      );
+
+      doc.keywords = mal_data.synonyms.concat(
+        keywords
+          .split(",")
+          .filter((item) => mal_data.synonyms.indexOf(item) < 0)
+      );
+      break;
+    }
+    doc.save();
+    //await UpdateAnime(doc);
   }
 });
 
@@ -170,3 +212,5 @@ async function UpdateAnime(doc) {
   }
   await doc.save();
 }
+
+async function updateWithKeywords(doc) {}
