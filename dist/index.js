@@ -9,6 +9,7 @@ server.listen(3000, () => {
   getAnimeById(2045);
   console.log("Server listening on port 3000");
 }); */
+import { getAnime } from "./src/sources/animeslayer";
 const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 import mongoose from "./src/db/Database.js";
 import { Schema, Types, model } from "mongoose";
@@ -97,7 +98,7 @@ async function createAnime(d) {
 }
 mongoose.connection.on("open", async () => {
     let promises = [];
-    for await (const doc of AnimeModal.find({ id: { $gt: 1000 } })) {
+    for await (const doc of AnimeModal.find({ $gte: 14407 })) {
         await UpdateAnime(doc);
     }
 });
@@ -105,24 +106,40 @@ async function UpdateAnime(doc) {
     let mal_data = doc.ani_id >= 1
         ? await getAnimeById(doc.ani_id)
         : await getAnimeByName(doc.name);
-    if (mal_data.id == null)
-        return console.log("Anime not found: " + doc.name);
-    doc.description_en = mal_data.description;
-    doc.mal_id = mal_data.idMal;
-    doc.ani_id = mal_data.id;
-    doc.duration = mal_data.duration.toString();
-    doc.source = mal_data.source;
-    doc.score = (mal_data.averageScore / 100) * 10;
-    doc.trailer = mal_data.trailer;
-    doc.genres_en = new Types.DocumentArray(mal_data.genres?.map((re, ind) => ({
-        id: ind,
-        name: re,
-    })));
-    doc.coverUrl = mal_data.coverImage.large;
-    doc.bannerUr = mal_data.bannerImage;
-    doc.studios = new Types.DocumentArray(mal_data.studios?.map((e) => ({
-        name: e.name,
-        id: e.id,
-    })));
+    if (!mal_data || mal_data.id == null) {
+        console.log("Anime not found[Updating using animeslayer]: " + doc.name);
+        let anime = await getAnime(doc.as_id);
+        doc.source = anime?.more_info_result?.source;
+        doc.trailer = anime?.more_info_result?.trailer_url;
+        doc.score = anime?.more_info_result?.score;
+        doc.score_by = anime?.more_info_result?.score_by;
+        doc.duration = anime?.more_info_result?.duration;
+        doc.coverUrl = anime.anime_cover_image_full_url
+            ? anime.anime_cover_image_full_url
+            : anime.anime_cover_image_url;
+        doc.bannerUr = anime?.anime_banner_image_url
+            ? anime.anime_banner_image_url
+            : doc.coverUrl;
+        doc.studios = anime?.more_info_result?.studios;
+    }
+    else {
+        doc.description_en = mal_data.description;
+        doc.mal_id = mal_data.idMal;
+        doc.ani_id = mal_data.id;
+        doc.duration = mal_data.duration.toString();
+        doc.source = mal_data.source;
+        doc.score = (mal_data.averageScore / 100) * 10;
+        doc.trailer = mal_data.trailer;
+        doc.genres_en = new Types.DocumentArray(mal_data.genres?.map((re, ind) => ({
+            id: ind,
+            name: re,
+        })));
+        doc.coverUrl = mal_data.coverImage.large;
+        doc.bannerUr = mal_data.bannerImage;
+        doc.studios = new Types.DocumentArray(mal_data.studios?.map((e) => ({
+            name: e.name,
+            id: e.id,
+        })));
+    }
     await doc.save();
 }
