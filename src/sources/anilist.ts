@@ -4,7 +4,7 @@ const Anilist = new anilist();
 let i = 1;
 
 async function getAnimeByName(animeName: string): Promise<AnimeEntry> {
-  console.log(i);
+  console.log("Getting anime by name: " + animeName);
   if (i >= 25) {
     console.log("Sleeping for 30 seconds");
     await sleep(30000);
@@ -31,6 +31,7 @@ async function getAnimeByName(animeName: string): Promise<AnimeEntry> {
 }
 
 async function getAnimeById(id) {
+  console.log("Getting anime by id: " + id);
   if (i >= 25) {
     console.log("Sleeping for 30 seconds");
     await sleep(30000);
