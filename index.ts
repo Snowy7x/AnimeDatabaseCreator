@@ -13,10 +13,10 @@ server.listen(3000, () => {
 import axios, { AxiosError } from "axios";
 import { getAnime } from "./src/sources/animeslayer";
 const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
-import mongoose from "./src/db/Database";
+import mongoose from "./src/db/Database.js";
 import { Document, Schema, Types, model } from "mongoose";
 import Inc from "mongoose-sequence";
-import { getAnimeById, getAnimeByName } from "./src/sources/anilist";
+import { getAnimeById, getAnimeByName } from "./src/sources/anilist.js";
 
 const AutoIncrement = Inc(mongoose);
 
