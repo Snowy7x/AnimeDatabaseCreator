@@ -3,9 +3,9 @@ const Anilist = new anilist();
 let i = 1;
 async function getAnimeByName(animeName) {
     console.log(i);
-    if (i >= 30) {
-        console.log("Sleeping for 10 seconds");
-        await sleep(10000);
+    if (i >= 25) {
+        console.log("Sleeping for 30 seconds");
+        await sleep(30000);
         i = 0;
     }
     i++;
@@ -25,9 +25,18 @@ async function getAnimeByName(animeName) {
         }
     }
 }
+async function getAnimeById(id) {
+    if (i >= 25) {
+        console.log("Sleeping for 30 seconds");
+        await sleep(30000);
+        i = 0;
+    }
+    i += 0.5;
+    return await Anilist.media.anime(id);
+}
 function sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
 }
-export { getAnimeByName };
+export { getAnimeByName, getAnimeById };

@@ -13,7 +13,7 @@ const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 import mongoose from "./src/db/Database.js";
 import { Schema, Types, model } from "mongoose";
 import Inc from "mongoose-sequence";
-import { getAnimeByName } from "./src/sources/anilist.js";
+import { getAnimeById, getAnimeByName } from "./src/sources/anilist.js";
 const AutoIncrement = Inc(mongoose);
 const T_Schema = new Schema({
   name: { type: String, default: null },
@@ -96,13 +96,20 @@ async function createAnime(d) {
   await anime.save();
 }
 mongoose.connection.on("open", async () => {
+  let promises = [];
   for await (const doc of AnimeModal.find()) {
-    await UpdateAnime(doc);
+    doc.mal_id;
+    promises.push(UpdateAnime(doc));
+    if (promises.length > 5) {
+      await Promise.all(promises);
+      promises = [];
+    }
   }
 });
 async function UpdateAnime(doc) {
   try {
     await getAnimeByName(doc.name).then(async (mal_data) => {
+      if (doc.id >= 1) mal_data = await getAnimeById(doc.ani_id);
       if (mal_data === null) mal_data = await getAnimeByName(doc.name);
       if (mal_data.id === null) mal_data = await getAnimeByName(doc.name);
       if (mal_data.id === null)
@@ -111,9 +118,9 @@ async function UpdateAnime(doc) {
       doc.description_en = mal_data.description;
       doc.mal_id = mal_data.idMal;
       doc.ani_id = mal_data.id;
-      doc.duration = mal_data.duration;
+      doc.duration = mal_data.duration.toString();
       doc.source = mal_data.source;
-      doc.score = mal_data.averageScore;
+      doc.score = (mal_data.averageScore / 100) * 10;
       doc.trailer = mal_data.trailer;
       doc.genres_en = new Types.DocumentArray(
         mal_data.genres?.map((re, ind) => ({
