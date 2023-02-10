@@ -105,26 +105,26 @@ mongoose.connection.on("open", async () => {
     let count = await docs.count();
     console.log(count);
     for await (const doc of docs) {
-        console.log("Getting anime: " + doc.as_id);
+        console.log("Getting anime[anime slayer]: " + doc.as_id);
         let anime = await getAnime(doc.as_id);
         if (!anime) {
-            console.log("Could not find anime: " + doc.as_id);
+            console.log("Could not find anime[anime slayer]: " + doc.as_id);
             continue;
         }
         else {
-            console.log("got anime: " + anime.anime_keywords);
+            console.log("got anime[anime slayer]: " + anime.anime_keywords);
         }
         let mal_data = null;
         let keywords = anime.anime_keywords;
         if (!keywords ||
-            keywords.length <= 1 ||
+            keywords.length <= 2 ||
             keywords === "," ||
             keywords === " ," ||
             keywords === ", ") {
-            mal_data = getAnimeByName(doc.name);
+            mal_data = await getAnimeByName(doc.name);
         }
         else {
-            for (const keyword of keywords.split(",")) {
+            for await (const keyword of keywords.split(",")) {
                 if (!keyword ||
                     keyword.length <= 1 ||
                     keyword === "," ||
