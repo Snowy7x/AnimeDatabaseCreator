@@ -137,18 +137,32 @@ mongoose.connection.on("open", async () => {
     } else {
       console.log("got anime: " + anime.anime_keywords);
     }
+    let mal_data = null;
     let keywords = anime.anime_keywords;
-    if (!keywords || keywords.length <= 1) continue;
-    for (const keyword of keywords.split(",")) {
-      if (
-        !keyword ||
-        keyword.length <= 1 ||
-        keyword === "," ||
-        keyword === " ," ||
-        keyword === ", "
-      )
-        continue;
-      const mal_data = await getAnimeByName(keyword);
+    if (
+      !keywords ||
+      keywords.length <= 1 ||
+      keywords === "," ||
+      keywords === " ," ||
+      keywords === ", "
+    ) {
+      mal_data = getAnimeByName(doc.name);
+    } else {
+      for (const keyword of keywords.split(",")) {
+        if (
+          !keyword ||
+          keyword.length <= 1 ||
+          keyword === "," ||
+          keyword === " ," ||
+          keyword === ", "
+        )
+          continue;
+        const mal_data = await getAnimeByName(keyword);
+        if (!mal_data || mal_data.mal_id == null) continue;
+        else break;
+      }
+    }
+    if (mal_data != null) {
       if (!mal_data || mal_data.mal_id == null) continue;
       console.log("Updating anime: " + mal_data.title);
       doc.description_en = mal_data.synopsis;
@@ -184,9 +198,8 @@ mongoose.connection.on("open", async () => {
             (item) => keywords.split(",").indexOf(item) < 0
           )
         );
-      break;
+      await doc.save();
     }
-    doc.save();
     //await UpdateAnime(doc);
   }
 });
