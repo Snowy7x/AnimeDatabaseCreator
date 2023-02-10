@@ -12,8 +12,22 @@ async function Search(animeName: string) {
     .then((re) => re.data);
 }
 
+let i = 0;
+
 async function getAnimeByName(animeName: string) {
+  i = 0;
+  if (i > 2) {
+    console.log("Sleeping for 1.5 secs...");
+    await sleep(1500);
+    i = 0;
+  }
   return await Search(animeName).then((re) => re[0]);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 async function getAnimeByNameWithEpisodes(animeName: string) {

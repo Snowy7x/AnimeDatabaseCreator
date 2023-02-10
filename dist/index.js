@@ -14,7 +14,7 @@ const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 import mongoose from "./src/db/Database.js";
 import { Schema, Types, model } from "mongoose";
 import Inc from "mongoose-sequence";
-import { getAnimeById, getAnimeByName } from "./src/sources/anilist.js";
+import { getAnimeByName } from "./src/sources/myanimelist.js";
 const AutoIncrement = Inc(mongoose);
 const T_Schema = new Schema({
     name: { type: String, default: null },
@@ -98,16 +98,21 @@ async function createAnime(d) {
     await anime.save();
 }
 // 3849 requires update
+// animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
     let promises = [];
-    let docs = AnimeModal.find({ ani_id: { $eq: null } });
+    let docs = AnimeModal.find({ ani_id: null });
     let count = await docs.count();
     console.log(count);
     for await (const doc of docs) {
+        console.log("Getting anime: " + doc.as_id);
         let anime = await getAnime(doc.as_id);
         if (!anime) {
             console.log("Could not find anime: " + doc.as_id);
             continue;
+        }
+        else {
+            console.log("got anime: " + anime.anime_keywords);
         }
         let keywords = anime.anime_keywords;
         if (!keywords || keywords.length <= 1)
@@ -120,75 +125,83 @@ mongoose.connection.on("open", async () => {
                 keyword === ", ")
                 continue;
             const mal_data = await getAnimeByName(keyword);
-            if (!mal_data || mal_data.id == null)
+            if (!mal_data || mal_data.mal_id == null)
                 continue;
-            console.log("Updating anime: " + mal_data.title.userPreferred);
-            doc.description_en = mal_data.description;
-            doc.mal_id = mal_data.idMal;
-            doc.ani_id = mal_data.id;
+            console.log("Updating anime: " + mal_data.title);
+            doc.description_en = mal_data.synopsis;
+            doc.mal_id = mal_data.mal_id;
+            doc.ani_id = null;
             doc.duration = mal_data?.duration?.toString();
             doc.source = mal_data.source;
-            doc.score = (mal_data.averageScore / 100) * 10;
-            doc.trailer = mal_data?.trailer?.toString();
+            doc.score = mal_data.score;
+            doc.scored_by = mal_data.scored_by;
+            doc.trailer = mal_data?.trailer.url;
             doc.genres_en = new Types.DocumentArray(mal_data.genres?.map((re, ind) => ({
-                id: ind,
-                name: re,
+                id: re.mal_id,
+                name: re.name,
             })));
-            doc.coverUrl = mal_data.coverImage.large;
-            doc.bannerUr = mal_data.bannerImage;
+            doc.coverUrl = mal_data.images.jpg?.maximum_image_url
+                ? mal_data.images.jpg?.maximum_image_url
+                : mal_data.images.webp?.maximum_image_url;
+            doc.bannerUr = mal_data.images.jpg?.maximum_image_url;
             doc.studios = new Types.DocumentArray(mal_data.studios?.map((e) => ({
                 name: e.name,
-                id: e.id,
+                id: e.mal_id,
             })));
             doc.keywords = keywords
                 .split(",")
                 .filter((keyword) => keyword.length > 0)
-                .concat(mal_data?.synonyms?.filter((item) => keywords.split(",").indexOf(item) < 0));
+                .concat(mal_data?.title_synonyms?.filter((item) => keywords.split(",").indexOf(item) < 0));
             break;
         }
         doc.save();
         //await UpdateAnime(doc);
     }
 });
-async function UpdateAnime(doc) {
-    let mal_data = doc.ani_id >= 1
-        ? await getAnimeById(doc.ani_id)
-        : await getAnimeByName(doc.name);
-    if (!mal_data || mal_data.id == null) {
-        console.log("Anime not found[Updating using animeslayer]: " + doc.name);
-        let anime = await getAnime(doc.as_id);
-        doc.source = anime?.more_info_result?.source;
-        doc.trailer = anime?.more_info_result?.trailer_url;
-        doc.score = anime?.more_info_result?.score;
-        doc.score_by = anime?.more_info_result?.score_by;
-        doc.duration = anime?.more_info_result?.duration;
-        doc.coverUrl = anime.anime_cover_image_full_url
-            ? anime.anime_cover_image_full_url
-            : anime.anime_cover_image_url;
-        doc.bannerUr = anime?.anime_banner_image_url
-            ? anime.anime_banner_image_url
-            : doc.coverUrl;
-        doc.studios = anime?.more_info_result?.studios;
-    }
-    else {
-        doc.description_en = mal_data.description;
-        doc.mal_id = mal_data.idMal;
-        doc.ani_id = mal_data.id;
-        doc.duration = mal_data.duration.toString();
-        doc.source = mal_data.source;
-        doc.score = (mal_data.averageScore / 100) * 10;
-        doc.trailer = mal_data.trailer;
-        doc.genres_en = new Types.DocumentArray(mal_data.genres?.map((re, ind) => ({
-            id: ind,
-            name: re,
-        })));
-        doc.coverUrl = mal_data.coverImage.large;
-        doc.bannerUr = mal_data.bannerImage;
-        doc.studios = new Types.DocumentArray(mal_data.studios?.map((e) => ({
-            name: e.name,
-            id: e.id,
-        })));
-    }
-    await doc.save();
+/* async function UpdateAnime(doc) {
+  let mal_data =
+    doc.ani_id >= 1
+      ? await getAnimeById(doc.ani_id)
+      : await getAnimeByName(doc.name);
+  if (!mal_data || mal_data.id == null) {
+    console.log("Anime not found[Updating using animeslayer]: " + doc.name);
+    let anime = await getAnime(doc.as_id);
+    doc.source = anime?.more_info_result?.source;
+    doc.trailer = anime?.more_info_result?.trailer_url;
+    doc.score = anime?.more_info_result?.score;
+    doc.score_by = anime?.more_info_result?.score_by;
+    doc.duration = anime?.more_info_result?.duration;
+    doc.coverUrl = anime.anime_cover_image_full_url
+      ? anime.anime_cover_image_full_url
+      : anime.anime_cover_image_url;
+    doc.bannerUr = anime?.anime_banner_image_url
+      ? anime.anime_banner_image_url
+      : doc.coverUrl;
+    doc.studios = anime?.more_info_result?.studios;
+  } else {
+    doc.description_en = mal_data.description;
+    doc.mal_id = mal_data.idMal;
+    doc.ani_id = mal_data.id;
+    doc.duration = mal_data.duration.toString();
+    doc.source = mal_data.source;
+    doc.score = (mal_data.averageScore / 100) * 10;
+    doc.trailer = mal_data.trailer;
+    doc.genres_en = new Types.DocumentArray(
+      mal_data.genres?.map((re, ind) => ({
+        id: ind,
+        name: re,
+      }))
+    );
+    doc.coverUrl = mal_data.coverImage.large;
+    doc.bannerUr = mal_data.bannerImage;
+    doc.studios = new Types.DocumentArray(
+      mal_data.studios?.map((e) => ({
+        name: e.name,
+        id: e.id,
+      }))
+    );
+  }
+  await doc.save();
 }
+ */
 async function updateWithKeywords(doc) { }
