@@ -29,6 +29,7 @@ async function getAnimeByNameWithEpisodes(animeName) {
     let episodeVideos = await client
         .getAnimeEpisodeVideos(anime.mal_id)
         .then((re) => re.data);
+    await sleep(1000);
     return { episodeVideos, ...anime };
 }
 export { Search, getAnimeByName, getAnimeByNameWithEpisodes };
