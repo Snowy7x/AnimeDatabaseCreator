@@ -1,4 +1,10 @@
-import { AnimeClient, SearchOrder, SortOptions } from "@tutkli/jikan-ts";
+import {
+  AnimeClient,
+  AnimeEpisodeVideo,
+  SearchOrder,
+  SortOptions,
+  Anime,
+} from "@tutkli/jikan-ts";
 
 const client = new AnimeClient();
 
@@ -30,13 +36,21 @@ function sleep(ms) {
   });
 }
 
-async function getAnimeByNameWithEpisodes(animeName: string) {
+interface FullAnime extends Anime {
+  episodeVideos: AnimeEpisodeVideo[];
+}
+
+async function getAnimeByNameWithEpisodes(
+  animeName: string
+): Promise<FullAnime> {
   let anime = await getAnimeByName(animeName);
-  // @ts-ignore
-  anime.episodeVideos = await client
+
+  let episodeVideos = await client
     .getAnimeEpisodeVideos(anime.mal_id)
     .then((re) => re.data);
-  return anime;
+  await sleep(1000);
+
+  return { episodeVideos, ...anime };
 }
 
 export { Search, getAnimeByName, getAnimeByNameWithEpisodes };

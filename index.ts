@@ -11,13 +11,20 @@ server.listen(3000, () => {
 }); */
 
 import axios, { AxiosError } from "axios";
-import { getAnime } from "./src/sources/animeslayer.js";
+import {
+  getAnime,
+  getEpisodesList,
+  getWatchLinks,
+} from "./src/sources/animeslayer.js";
 const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 import mongoose from "./src/db/Database.js";
 import { Document, Schema, Types, model } from "mongoose";
 import Inc from "mongoose-sequence";
 import { error } from "console";
-import { getAnimeByName } from "./src/sources/myanimelist.js";
+import {
+  getAnimeByName,
+  getAnimeByNameWithEpisodes,
+} from "./src/sources/myanimelist.js";
 import { kill } from "process";
 
 const AutoIncrement = Inc(mongoose);
@@ -30,6 +37,7 @@ const T_Schema = new Schema({
 const EpisodeDetails = new Schema({
   id: { type: Number, default: null },
   name: { type: String, default: null },
+  number: { type: String, default: null },
   thumbnailUrl: { type: String, default: null },
   urls: { type: [String], default: [] },
 });
@@ -120,15 +128,40 @@ async function createAnime(d: any) {
   await anime.save();
 }
 
-// 3849 requires update
-// animes with ani_id: 102416
+// TODO: 3849 requires update
+// TODO: animes with ani_id: 102416
 
 mongoose.connection.on("open", async () => {
   let promises = [];
-  let docs = AnimeModal.find({ ani_id: null });
+  let docs = AnimeModal.find();
   let count = await docs.count();
   console.log(count);
+  // TODO: Update the episodes
   for await (const doc of docs) {
+    let eps = await getEpisodesList(doc.as_id);
+    let anime = await getAnimeByNameWithEpisodes(doc.name);
+    let episodes = [];
+    for (const ep of eps.data) {
+      const ep2 = anime.episodeVideos.find(
+        (p) => p.episode === ep.episode_number
+      );
+      let urls = await getWatchLinks(doc.as_id, ep.episode_id);
+      episodes.push({
+        id: ep.episode_id,
+        name: ep.episode_name,
+        number: ep.episode_number,
+        thumbnail: ep2.images.jpg?.maximum_image_url
+          ? ep2.images.jpg.maximum_image_url
+          : ep2.images.webp.maximum_image_url,
+        urls: urls,
+      });
+    }
+    doc.episodes = new Types.DocumentArray(episodes);
+    await doc.save();
+    console.log("Updated episodes: ", episodes.length);
+  }
+  // TODO: Updating the rest...
+  /* for await (const doc of docs) {
     console.log("Getting anime[anime slayer]: " + doc.as_id);
     let anime = await getAnime(doc.as_id);
     if (!anime) {
@@ -201,7 +234,7 @@ mongoose.connection.on("open", async () => {
       await doc.save();
     }
     //await UpdateAnime(doc);
-  }
+  } */
 });
 
 /* async function UpdateAnime(doc) {

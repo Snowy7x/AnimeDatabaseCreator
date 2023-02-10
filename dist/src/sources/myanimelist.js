@@ -1,4 +1,4 @@
-import { AnimeClient, SearchOrder, SortOptions } from "@tutkli/jikan-ts";
+import { AnimeClient, SearchOrder, SortOptions, } from "@tutkli/jikan-ts";
 const client = new AnimeClient();
 async function Search(animeName) {
     return await client
@@ -26,11 +26,10 @@ function sleep(ms) {
 }
 async function getAnimeByNameWithEpisodes(animeName) {
     let anime = await getAnimeByName(animeName);
-    // @ts-ignore
-    anime.episodeVideos = await client
+    let episodeVideos = await client
         .getAnimeEpisodeVideos(anime.mal_id)
         .then((re) => re.data);
-    return anime;
+    return { episodeVideos, ...anime };
 }
 export { Search, getAnimeByName, getAnimeByNameWithEpisodes };
 export default client;
