@@ -136,7 +136,7 @@ export async function getWatchLinks(animeId, episodeId) {
         },
     })
         .then((re) => re.data);
-    servers.push(normal_servers);
+    servers = normal_servers;
     if (servers.length <= 0) {
         const url_ = new URL(urls[0].episode_url);
         const params_ = url_.searchParams;
@@ -155,21 +155,24 @@ export async function getWatchLinks(animeId, episodeId) {
             let decrypted = RNCryptor.Decrypt(re.data, "android-app9>E>VBa=X%;[5BX~=Q~K");
             let js = JSON.parse(decrypted.toString());
             for (let i in js) {
-                let link = js[i].file;
-                js[i].label = link.includes("h.mp4")
-                    ? "1080p"
-                    : link.includes("m.mp4")
-                        ? "720p"
-                        : link.includes("s.mp4")
-                            ? "480p"
-                            : "av";
-                js[i].file =
+                i =
                     "http://191.101.2.27:3030/v2/ar/proxy?url=" +
                         encodeURIComponent(js[i].file);
+                /* let link = js[i].file;
+                js[i].label = link.includes("h.mp4")
+                  ? "1080p"
+                  : link.includes("m.mp4")
+                  ? "720p"
+                  : link.includes("s.mp4")
+                  ? "480p"
+                  : "av";
+                js[i].file =
+                  "http://191.101.2.27:3030/v2/ar/proxy?url=" +
+                  encodeURIComponent(js[i].file); */
             }
             return js;
         });
-        servers.push(og_urls);
+        servers = og_urls;
     }
     return servers;
 }

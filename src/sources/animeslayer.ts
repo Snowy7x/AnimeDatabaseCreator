@@ -183,7 +183,7 @@ export async function getWatchLinks(
       }
     )
     .then((re) => re.data);
-  servers.push(normal_servers);
+  servers = normal_servers;
 
   if (servers.length <= 0) {
     const url_ = new URL(urls[0].episode_url);
@@ -210,7 +210,10 @@ export async function getWatchLinks(
         );
         let js = JSON.parse(decrypted.toString());
         for (let i in js) {
-          let link = js[i].file;
+          i =
+            "http://191.101.2.27:3030/v2/ar/proxy?url=" +
+            encodeURIComponent(js[i].file);
+          /* let link = js[i].file;
           js[i].label = link.includes("h.mp4")
             ? "1080p"
             : link.includes("m.mp4")
@@ -220,12 +223,12 @@ export async function getWatchLinks(
             : "av";
           js[i].file =
             "http://191.101.2.27:3030/v2/ar/proxy?url=" +
-            encodeURIComponent(js[i].file);
+            encodeURIComponent(js[i].file); */
         }
         return js;
       });
 
-    servers.push(og_urls);
+    servers = og_urls;
   }
 
   return servers;

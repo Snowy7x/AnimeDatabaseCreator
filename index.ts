@@ -130,6 +130,8 @@ async function createAnime(d: any) {
 
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
+let urls = await getWatchLinks(79, 64);
+console.log(urls);
 
 mongoose.connection.on("open", async () => {
   let promises = [];
