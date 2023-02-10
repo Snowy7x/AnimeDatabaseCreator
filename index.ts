@@ -151,8 +151,10 @@ mongoose.connection.on("open", async () => {
         name: ep.episode_name,
         number: ep.episode_number,
         thumbnail: ep2?.images?.jpg?.maximum_image_url
-          ? ep2.images.jpg.maximum_image_url
-          : ep2.images.webp.maximum_image_url,
+          ? ep2?.images?.jpg?.maximum_image_url
+          : ep2?.images?.webp?.maximum_image_url
+          ? ep2?.images?.webp?.maximum_image_url
+          : doc.coverUrl,
         urls: urls,
       });
     }
