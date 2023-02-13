@@ -14,7 +14,7 @@ const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 import mongoose from "./src/db/Database.js";
 import { Schema, Types, model } from "mongoose";
 import Inc from "mongoose-sequence";
-import { getAnimeByNameWithEpisodes, } from "./src/sources/myanimelist.js";
+import { getEpisodesWithId, } from "./src/sources/myanimelist.js";
 const AutoIncrement = Inc(mongoose);
 const T_Schema = new Schema({
     name: { type: String, default: null },
@@ -104,16 +104,23 @@ let urls = await getWatchLinks(79, 64);
 console.log(urls);
 mongoose.connection.on("open", async () => {
     let promises = [];
-    let docs = AnimeModal.find();
+    let docs = AnimeModal.find({ mal_id: { $ne: null } });
     let count = await docs.count();
     console.log(count);
     // TODO: Update the episodes
     for await (const doc of docs) {
         let eps = await getEpisodesList(doc.as_id);
-        let anime = await getAnimeByNameWithEpisodes(doc.name);
+        if (doc.episodes.length >= eps.data.length)
+            continue;
+        console.log("Fetching episodes watch links: " + doc.id);
+        let videos = [];
+        if (doc.year < 2001 && doc.status == "Finished Airing")
+            videos = [];
+        else
+            videos = await getEpisodesWithId(doc.mal_id);
         let episodes = [];
-        for (const ep of eps.data) {
-            const ep2 = anime.episodeVideos.find((p) => p.episode === ep.episode_number);
+        for await (const ep of eps.data) {
+            const ep2 = videos.find((p) => p.episode === ep.episode_number);
             let urls = await getWatchLinks(doc.as_id, ep.episode_id);
             episodes.push({
                 id: ep.episode_id,

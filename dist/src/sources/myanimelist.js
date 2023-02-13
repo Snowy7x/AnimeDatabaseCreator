@@ -32,5 +32,13 @@ async function getAnimeByNameWithEpisodes(animeName) {
     await sleep(1000);
     return { episodeVideos, ...anime };
 }
-export { Search, getAnimeByName, getAnimeByNameWithEpisodes };
+async function getEpisodesWithId(id) {
+    console.log("getEpisodesWithId");
+    let episodeVideos = await client
+        .getAnimeEpisodeVideos(id)
+        .then((re) => re.data);
+    await sleep(3000);
+    return episodeVideos;
+}
+export { Search, getAnimeByName, getAnimeByNameWithEpisodes, getEpisodesWithId, };
 export default client;
