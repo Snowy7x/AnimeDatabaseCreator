@@ -136,14 +136,18 @@ console.log(urls);
 
 mongoose.connection.on("open", async () => {
   let promises = [];
-  let docs = AnimeModal.find({ mal_id: { $ne: null } });
+  let docs = AnimeModal.find({
+    mal_id: { $ne: null },
+    status: { $ne: "Not Yet Aired" },
+    "episodes.0": { $exists: false },
+  });
   let count = await docs.count();
   console.log(count);
   // TODO: Update the episodes
   for await (const doc of docs) {
     let eps = await getEpisodesList(doc.as_id);
     if (doc.episodes.length >= eps.data.length) continue;
-    console.log("Fetching episodes watch links: " + doc.id);
+    console.log(`Fetching episodes watch links[${doc.id}]: ` + eps.data.length);
     let videos = [];
     if (doc.year < 2001 && doc.status == "Finished Airing") videos = [];
     else videos = await getEpisodesWithId(doc.mal_id);
