@@ -115,6 +115,7 @@ export async function getEpisodesList(id) {
     });
 }
 export async function getWatchLinks(animeId, episodeId) {
+    console.log(animeId, episodeId);
     let episode = await getEpisode(animeId, episodeId);
     if (episode.code !== 200) {
         return [];

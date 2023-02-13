@@ -155,6 +155,7 @@ export async function getWatchLinks(
   animeId: number | string,
   episodeId: number | string
 ): Promise<string[]> {
+  console.log(animeId, episodeId);
   let episode = await getEpisode(animeId, episodeId);
   if (episode.code !== 200) {
     return [];
