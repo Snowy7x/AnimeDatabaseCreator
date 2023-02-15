@@ -106,7 +106,7 @@ mongoose.connection.on("open", async () => {
     let docs = AnimeModal.find({
         mal_id: { $ne: null },
         status: { $ne: "Not Yet Aired" },
-        as_id: { $lte: 4570 },
+        as_id: { $lte: 3492 },
         "episodes.0": { $exists: false },
     });
     let count = await docs.clone().count();
@@ -128,7 +128,7 @@ mongoose.connection.on("open", async () => {
             videos = await getEpisodesWithId(doc.mal_id);
         let episodes = [];
         for await (const ep of eps.data) {
-            const ep2 = videos.find((p) => p.episode === ep.episode_number);
+            const ep2 = videos?.find((p) => p.episode === ep.episode_number);
             let urls = await getWatchLinks(doc.as_id, ep.episode_id);
             episodes.push({
                 id: ep.episode_id,
