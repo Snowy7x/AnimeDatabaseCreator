@@ -90,7 +90,7 @@ export async function getEpisodesList(id) {
     return await axios
         .post("https://anslayer.com/anime/public/episodes/get-episodes-new", new URLSearchParams({
         inf: "",
-        json: `{"more_info":"No","anime_id":${id}}`,
+        json: JSON.stringify({ more_info: "No", anime_id: id }),
     }), {
         headers: {
             "Client-Id": "android-app2",

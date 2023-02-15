@@ -129,7 +129,7 @@ async function createAnime(d: any) {
   await anime.save();
 }
 
-getEpisodesWithId(53446).then((ep) => console.log("Episodes: ", ep));
+//getEpisodesWithId(53446).then((ep) => console.log("Episodes: ", ep));
 
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416

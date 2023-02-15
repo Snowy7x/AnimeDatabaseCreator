@@ -98,6 +98,7 @@ async function createAnime(d) {
     });
     await anime.save();
 }
+//getEpisodesWithId(53446).then((ep) => console.log("Episodes: ", ep));
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
@@ -105,6 +106,7 @@ mongoose.connection.on("open", async () => {
     let docs = AnimeModal.find({
         mal_id: { $ne: null },
         status: { $ne: "Not Yet Aired" },
+        as_id: { $lte: 4570 },
         "episodes.0": { $exists: false },
     });
     let count = await docs.clone().count();
