@@ -138,8 +138,8 @@ mongoose.connection.on("open", async () => {
   let docs = AnimeModal.find({
     mal_id: { $ne: null },
     status: { $ne: "Not Yet Aired" },
+    as_id: { $lte: 4570 },
     "episodes.0": { $exists: false },
-    id: { $lte: 4570 },
   });
   let count = await docs.clone().count();
   console.log(count);
