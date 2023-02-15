@@ -79,7 +79,7 @@ export async function getEpisode(animeId, episodeId) {
         };
     })
         .catch(function (error) {
-        console.log("ar/v2/episode [41] Error:", error.message);
+        console.log("animesayer.js [113] Error:", error.message);
         return {
             code: 400,
             data: error.message,
@@ -107,7 +107,7 @@ export async function getEpisodesList(id) {
         };
     })
         .catch(function (error) {
-        console.log("ar/v2/episode [41] Error:", error.message);
+        console.log("animesayer.js [146] Error:", error.message);
         return {
             code: 400,
             data: error.message,

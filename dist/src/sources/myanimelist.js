@@ -1,4 +1,5 @@
 import { AnimeClient, SearchOrder, SortOptions, } from "@tutkli/jikan-ts";
+import axios from "axios";
 const client = new AnimeClient();
 async function Search(animeName) {
     return await client
@@ -32,13 +33,43 @@ async function getAnimeByNameWithEpisodes(animeName) {
     await sleep(1000);
     return { episodeVideos, ...anime };
 }
-async function getEpisodesWithId(id) {
-    console.log("getEpisodesWithId");
-    let episodeVideos = await client
-        .getAnimeEpisodeVideos(id)
-        .then((re) => re.data);
-    await sleep(3000);
-    return episodeVideos;
+async function getEpisodesWithId(id, page = 1, tries = 0) {
+    console.log("getEpisodesWithId: " + id);
+    /* let episodeVideos = await client
+      .getAnimeEpisodeVideos(id)
+      .then((re) => re.data); */
+    if (tries >= 5)
+        return [];
+    let data = await axios
+        .get(`https://api.jikan.moe/v4/anime/${id}/videos/episodes?page=${page}`)
+        .then(async (res) => {
+        let eps = res.data.data;
+        let hasNext = res.data.pagination.has_next_page;
+        if (hasNext) {
+            let count = res.data.pagination.last_visible_page - page;
+            for (let i = page; i <= count; i++) {
+                let d = await axios
+                    .get(`https://api.jikan.moe/v4/anime/${id}/videos/episodes?page=${i}`)
+                    .then((res) => {
+                    return res.data.data;
+                })
+                    .catch(async (err) => {
+                    await sleep(3000);
+                    console.log("Error: ", err);
+                    return await getEpisodesWithId(id, i, tries++);
+                });
+                eps.push(d);
+            }
+        }
+        return eps;
+    })
+        .catch(async (err) => {
+        await sleep(3000);
+        console.log("Error: ", err);
+        return await getEpisodesWithId(id, page, tries++);
+    });
+    await sleep(1000);
+    return data;
 }
 export { Search, getAnimeByName, getAnimeByNameWithEpisodes, getEpisodesWithId, };
 export default client;

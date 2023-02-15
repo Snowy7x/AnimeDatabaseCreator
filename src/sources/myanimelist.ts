@@ -5,6 +5,7 @@ import {
   SortOptions,
   Anime,
 } from "@tutkli/jikan-ts";
+import axios from "axios";
 
 const client = new AnimeClient();
 
@@ -53,14 +54,50 @@ async function getAnimeByNameWithEpisodes(
   return { episodeVideos, ...anime };
 }
 
-async function getEpisodesWithId(id: number): Promise<AnimeEpisodeVideo[]> {
-  console.log("getEpisodesWithId");
-  let episodeVideos = await client
+async function getEpisodesWithId(
+  id: number,
+  page = 1,
+  tries = 0
+): Promise<AnimeEpisodeVideo[]> {
+  console.log("getEpisodesWithId: " + id);
+  /* let episodeVideos = await client
     .getAnimeEpisodeVideos(id)
-    .then((re) => re.data);
-  await sleep(3000);
+    .then((re) => re.data); */
+  if (tries >= 5) return [];
+  let data = await axios
+    .get(`https://api.jikan.moe/v4/anime/${id}/videos/episodes?page=${page}`)
+    .then(async (res) => {
+      let eps = res.data.data;
+      let hasNext = res.data.pagination.has_next_page;
 
-  return episodeVideos;
+      if (hasNext) {
+        let count = res.data.pagination.last_visible_page - page;
+        for (let i = page; i <= count; i++) {
+          let d = await axios
+            .get(
+              `https://api.jikan.moe/v4/anime/${id}/videos/episodes?page=${i}`
+            )
+            .then((res) => {
+              return res.data.data;
+            })
+            .catch(async (err) => {
+              await sleep(3000);
+              console.log("Error: ", err);
+              return await getEpisodesWithId(id, i, tries++);
+            });
+          eps.push(d);
+        }
+      }
+      return eps;
+    })
+    .catch(async (err) => {
+      await sleep(3000);
+      console.log("Error: ", err);
+      return await getEpisodesWithId(id, page, tries++);
+    });
+
+  await sleep(1000);
+  return data;
 }
 
 export {
