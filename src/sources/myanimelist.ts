@@ -68,10 +68,10 @@ async function getEpisodesWithId(
     .get(`https://api.jikan.moe/v4/anime/${id}/videos/episodes?page=${page}`)
     .then(async (res) => {
       let eps = res.data.data;
-      let hasNext = res.data.pagination.has_next_page;
+      let hasNext = res.data?.pagination?.has_next_page;
 
       if (hasNext) {
-        let count = res.data.pagination.last_visible_page - page;
+        let count = res.data?.pagination?.last_visible_page - page;
         for (let i = page; i <= count; i++) {
           let d = await axios
             .get(
@@ -82,7 +82,7 @@ async function getEpisodesWithId(
             })
             .catch(async (err) => {
               await sleep(3000);
-              console.log("Error: ", err);
+              console.log("Error: ", err.message);
               return await getEpisodesWithId(id, i, tries++);
             });
           eps.push(d);
@@ -92,7 +92,7 @@ async function getEpisodesWithId(
     })
     .catch(async (err) => {
       await sleep(3000);
-      console.log("Error: ", err);
+      console.log("Error: ", err.message);
       return await getEpisodesWithId(id, page, tries++);
     });
 
