@@ -107,6 +107,7 @@ await axios({
 mongoose.connection.on("open", async () => {
     let docs = AnimeModal.find({
         as_id: { $gte: 0 },
+        ani_id: null,
     });
     let count = await docs.clone().count();
     console.log(count);
