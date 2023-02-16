@@ -127,7 +127,7 @@ mongoose.connection.on("open", async () => {
         more_info: "No",
       },
     })
-      .then((res: any) => {
+      .then(async (res: any) => {
         console.log("Got the anime, updating...");
         let keywords = res.data.response.data?.anime_keywords;
         if (
@@ -136,9 +136,14 @@ mongoose.connection.on("open", async () => {
           keywords === "," ||
           keywords === " ," ||
           keywords === ", "
-        )
-          return;
-        console.log(keywords.split(","));
+        ) {
+          doc.keywords = new Types.DocumentArray([doc.name]);
+        } else {
+          doc.keywords = new Types.DocumentArray(
+            keywords.split(",").filter((x) => x.length > 1)
+          );
+        }
+        await doc.save();
         return res.data;
       })
       .catch((err) => {
