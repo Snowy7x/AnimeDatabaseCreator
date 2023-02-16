@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "test": "npx ts-node ./src/test.ts",
-    "test2": "npx ts-node ./updateKeywords.ts",
+    "test2": "node ./dist/updateKeywords.js",
     "start": "node ./dist/index.js",
     "start:dev": "npx nodemon",
     "build": "tsc --build",
