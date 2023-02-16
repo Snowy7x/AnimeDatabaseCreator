@@ -187,8 +187,15 @@ export async function getWatchLinks(
   if (servers.length <= 0) {
     const url_ = new URL(urls[0].episode_url);
     const params_ = url_.searchParams;
-    const og_urls = await axios
-      .post(
+    const q = new URLSearchParams({
+      f: params_.get("f"),
+      e: params_.get("e"),
+      inf: '{"a": "mrg+e9GTkHaj8WXD7Cz3+Wbc1E4xYrvHLqW1vRF8xSo2B4K7Y5B7wcjHaoL1haW8Ynp3gYuGBRWFY/XaoEzVRcM/g8pJtaAT3FgwZh+KajpmkenxL0V/ghBXTwctGtEQFUO/UAJVGx2QClCE6gKSTQ==", "b": "102.185.179.127"}',
+    });
+    const og_urls = [
+      "https://anslayer.com/anime/public/v-qs.php?" + q.toString(),
+    ];
+    /* .post(
         "https://anslayer.com/anime/public/v-qs.php",
         new URLSearchParams({
           f: params_.get("f"),
@@ -210,7 +217,7 @@ export async function getWatchLinks(
         let js = JSON.parse(decrypted.toString());
         for (let i in js) {
           i =
-            "http://191.101.2.27:3030/v2/ar/proxy?url=" +
+            "http://www.snowyanime.com:3000/v2/ar/proxy?url=" +
             encodeURIComponent(js[i].file);
           /* let link = js[i].file;
           js[i].label = link.includes("h.mp4")
@@ -223,9 +230,9 @@ export async function getWatchLinks(
           js[i].file =
             "http://191.101.2.27:3030/v2/ar/proxy?url=" +
             encodeURIComponent(js[i].file); */
-        }
+    /*}
         return js;
-      });
+      }); */
 
     servers = og_urls;
   }

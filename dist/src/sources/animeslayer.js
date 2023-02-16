@@ -1,5 +1,4 @@
 import axios from "axios";
-import RNCryptor from "rncryptor-node";
 const published_url = "https://anslayer.com/anime/public/animes/get-published-animes";
 const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 const headers = {
@@ -139,38 +138,52 @@ export async function getWatchLinks(animeId, episodeId) {
     if (servers.length <= 0) {
         const url_ = new URL(urls[0].episode_url);
         const params_ = url_.searchParams;
-        const og_urls = await axios
-            .post("https://anslayer.com/anime/public/v-qs.php", new URLSearchParams({
+        const q = new URLSearchParams({
             f: params_.get("f"),
             e: params_.get("e"),
             inf: '{"a": "mrg+e9GTkHaj8WXD7Cz3+Wbc1E4xYrvHLqW1vRF8xSo2B4K7Y5B7wcjHaoL1haW8Ynp3gYuGBRWFY/XaoEzVRcM/g8pJtaAT3FgwZh+KajpmkenxL0V/ghBXTwctGtEQFUO/UAJVGx2QClCE6gKSTQ==", "b": "102.185.179.127"}',
-        }), {
-            headers: {
+        });
+        const og_urls = [
+            "https://anslayer.com/anime/public/v-qs.php?" + q.toString(),
+        ];
+        /* .post(
+            "https://anslayer.com/anime/public/v-qs.php",
+            new URLSearchParams({
+              f: params_.get("f"),
+              e: params_.get("e"),
+              inf: '{"a": "mrg+e9GTkHaj8WXD7Cz3+Wbc1E4xYrvHLqW1vRF8xSo2B4K7Y5B7wcjHaoL1haW8Ynp3gYuGBRWFY/XaoEzVRcM/g8pJtaAT3FgwZh+KajpmkenxL0V/ghBXTwctGtEQFUO/UAJVGx2QClCE6gKSTQ==", "b": "102.185.179.127"}',
+            }),
+            {
+              headers: {
                 "User-Agent": "okhttp/3.12.12",
                 Host: "anslayer.com",
-            },
-        })
-            .then((re) => {
-            let decrypted = RNCryptor.Decrypt(re.data, "android-app9>E>VBa=X%;[5BX~=Q~K");
+              },
+            }
+          )
+          .then((re) => {
+            let decrypted = RNCryptor.Decrypt(
+              re.data,
+              "android-app9>E>VBa=X%;[5BX~=Q~K"
+            );
             let js = JSON.parse(decrypted.toString());
             for (let i in js) {
-                i =
-                    "http://191.101.2.27:3030/v2/ar/proxy?url=" +
-                        encodeURIComponent(js[i].file);
-                /* let link = js[i].file;
-                js[i].label = link.includes("h.mp4")
-                  ? "1080p"
-                  : link.includes("m.mp4")
-                  ? "720p"
-                  : link.includes("s.mp4")
-                  ? "480p"
-                  : "av";
-                js[i].file =
-                  "http://191.101.2.27:3030/v2/ar/proxy?url=" +
-                  encodeURIComponent(js[i].file); */
-            }
+              i =
+                "http://www.snowyanime.com:3000/v2/ar/proxy?url=" +
+                encodeURIComponent(js[i].file);
+              /* let link = js[i].file;
+              js[i].label = link.includes("h.mp4")
+                ? "1080p"
+                : link.includes("m.mp4")
+                ? "720p"
+                : link.includes("s.mp4")
+                ? "480p"
+                : "av";
+              js[i].file =
+                "http://191.101.2.27:3030/v2/ar/proxy?url=" +
+                encodeURIComponent(js[i].file); */
+        /*}
             return js;
-        });
+          }); */
         servers = og_urls;
     }
     return servers;
