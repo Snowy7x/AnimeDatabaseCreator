@@ -104,31 +104,6 @@ const headers = {
   "Client-Secret": "7befba6263cc14c90d2f1d6da2c5cf9b251bfbbd",
 };
 
-async function createAnime(d: any) {
-  const anime = new AnimeModal({
-    as_id: d.anime_id,
-
-    name: d.anime_name,
-    description_ar: d.anime_description,
-    coverUrl: d.anime_cover_image_full_url ?? d.anime_cover_image_url,
-    bannerUr: d.anime_banner_image_url,
-    source: d?.more_info_result?.source,
-
-    year: d.anime_release_year,
-
-    type: d.anime_type,
-    Rated: d.anime_age_rating,
-    season: d.anime_season,
-    status: d.anime_status,
-
-    genres_ar: d?.anime_genres?.split(", ").map((e, i) => ({
-      name: e,
-      id: d?.anime_genre_ids?.split(", ")[i],
-    })),
-  });
-  await anime.save();
-}
-
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
@@ -141,6 +116,7 @@ mongoose.connection.on("open", async () => {
   // TODO: Update the episodes
   let promises;
   for await (const doc of docs) {
+    console.log("Getting anime with id: ", doc.as_id);
     await axios({
       method: "GET",
       url: details_url,
@@ -152,7 +128,7 @@ mongoose.connection.on("open", async () => {
       },
     })
       .then((res: any) => {
-        console.log(res.data.response.data);
+        console.log("Got the anime, updating...");
         let keywords = res.data.response.data?.anime_keywords;
         if (
           !keywords ||
