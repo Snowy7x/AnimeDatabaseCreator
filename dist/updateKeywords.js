@@ -12,7 +12,7 @@ server.listen(3000, () => {
 import axios from "axios";
 const details_url = "https://anslayer.com/anime/public/anime/get-anime-details";
 import mongoose from "./src/db/Database.js";
-import { Schema, model } from "mongoose";
+import { Schema, Types, model } from "mongoose";
 import Inc from "mongoose-sequence";
 const AutoIncrement = Inc(mongoose);
 const T_Schema = new Schema({
@@ -77,26 +77,6 @@ const headers = {
     "Client-Id": "android-app2",
     "Client-Secret": "7befba6263cc14c90d2f1d6da2c5cf9b251bfbbd",
 };
-async function createAnime(d) {
-    const anime = new AnimeModal({
-        as_id: d.anime_id,
-        name: d.anime_name,
-        description_ar: d.anime_description,
-        coverUrl: d.anime_cover_image_full_url ?? d.anime_cover_image_url,
-        bannerUr: d.anime_banner_image_url,
-        source: d?.more_info_result?.source,
-        year: d.anime_release_year,
-        type: d.anime_type,
-        Rated: d.anime_age_rating,
-        season: d.anime_season,
-        status: d.anime_status,
-        genres_ar: d?.anime_genres?.split(", ").map((e, i) => ({
-            name: e,
-            id: d?.anime_genre_ids?.split(", ")[i],
-        })),
-    });
-    await anime.save();
-}
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
@@ -109,6 +89,7 @@ mongoose.connection.on("open", async () => {
     // TODO: Update the episodes
     let promises;
     for await (const doc of docs) {
+        console.log("Getting anime with id: ", doc.as_id);
         await axios({
             method: "GET",
             url: details_url,
@@ -119,16 +100,20 @@ mongoose.connection.on("open", async () => {
                 more_info: "No",
             },
         })
-            .then((res) => {
-            console.log(res.data.response.data);
+            .then(async (res) => {
+            console.log("Got the anime, updating...");
             let keywords = res.data.response.data?.anime_keywords;
             if (!keywords ||
                 keywords.length <= 2 ||
                 keywords === "," ||
                 keywords === " ," ||
-                keywords === ", ")
-                return;
-            console.log(keywords.split(","));
+                keywords === ", ") {
+                doc.keywords = new Types.DocumentArray([doc.name]);
+            }
+            else {
+                doc.keywords = new Types.DocumentArray(keywords.split(",").filter((x) => x.length > 1));
+            }
+            await doc.save();
             return res.data;
         })
             .catch((err) => {
