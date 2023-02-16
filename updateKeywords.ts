@@ -109,7 +109,7 @@ const headers = {
 mongoose.connection.on("open", async () => {
   let docs = AnimeModal.find({
     as_id: { $gte: 0 },
-    ani_id: null,
+    ani_id: { $ne: null },
   });
   let count = await docs.clone().count();
   console.log(count);
@@ -122,7 +122,7 @@ mongoose.connection.on("open", async () => {
       resolve(null);
     });
     promises.push(promise);
-    if (promises.length > 100) {
+    if (promises.length > 50) {
       await Promise.all(promises);
     }
   }
