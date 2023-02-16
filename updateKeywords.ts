@@ -147,7 +147,7 @@ async function updateKeywords(doc) {
       console.log(err.message);
       return null;
     });
-  const keywords = anime.anime_keywords;
+  const keywords = anime?.anime_keywords;
   console.log("Got the anime, updating: ", keywords);
   if (!keywords) {
     doc.keywords = new Types.DocumentArray([doc.name]);
