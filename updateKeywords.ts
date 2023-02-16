@@ -150,12 +150,13 @@ async function updateKeywords(doc) {
     });
   const keywords = anime?.anime_keywords;
   console.log("Got the anime, updating: ", keywords);
-  if (!keywords) {
+  if (!keywords || keywords.length < doc.name.length) {
     doc.keywords = new Types.DocumentArray([doc.name, doc.name]);
   } else {
-    doc.keywords = new Types.DocumentArray(
-      keywords.split(",").filter((x) => x.length > 1)
-    );
+    doc.keywords = new Types.DocumentArray([
+      doc.name,
+      ...keywords.split(",").filter((x) => x.length > 1),
+    ]);
   }
   await doc.save();
 }
