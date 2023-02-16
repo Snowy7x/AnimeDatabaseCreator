@@ -151,7 +151,7 @@ async function updateKeywords(doc) {
   const keywords = anime?.anime_keywords;
   console.log("Got the anime, updating: ", keywords);
   if (!keywords) {
-    doc.keywords = new Types.DocumentArray([doc.name]);
+    doc.keywords = new Types.DocumentArray([doc.name, doc.name]);
   } else {
     doc.keywords = new Types.DocumentArray(
       keywords.split(",").filter((x) => x.length > 1)
