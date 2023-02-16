@@ -103,30 +103,6 @@ const headers = {
   "Client-Id": "android-app2",
   "Client-Secret": "7befba6263cc14c90d2f1d6da2c5cf9b251bfbbd",
 };
-await axios({
-  method: "GET",
-  url: details_url,
-  headers: headers,
-  params: {
-    anime_id: 2024,
-    fetch_episodes: "No",
-    more_info: "No",
-  },
-})
-  .then(async (res: any) => {
-    let keywords = res.data.response?.anime_keywords;
-    console.log("Got the anime, updating:", keywords);
-    if (!keywords) {
-      console.log("No keywords");
-    } else {
-      console.log("Keywords: ", keywords);
-    }
-    return res.data;
-  })
-  .catch((err) => {
-    console.log(err.message);
-    return null;
-  });
 
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
@@ -140,7 +116,12 @@ mongoose.connection.on("open", async () => {
   // TODO: Update the episodes
   let promises = [];
   for await (const doc of (await docs).reverse()) {
-    promises.push(updateKeywords(doc));
+    let promise = new Promise(async (resolve, reject) => {
+      console.log("Getting anime with id: ", doc.as_id);
+      await updateKeywords(doc);
+      resolve(null);
+    });
+    promises.push(promise);
     if (promises.length > 100) {
       await Promise.all(promises);
     }
@@ -148,7 +129,6 @@ mongoose.connection.on("open", async () => {
 });
 
 async function updateKeywords(doc) {
-  console.log("Getting anime with id: ", doc.as_id);
   const anime = await axios({
     method: "GET",
     url: details_url,
