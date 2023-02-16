@@ -77,48 +77,75 @@ const headers = {
     "Client-Id": "android-app2",
     "Client-Secret": "7befba6263cc14c90d2f1d6da2c5cf9b251bfbbd",
 };
+await axios({
+    method: "GET",
+    url: details_url,
+    headers: headers,
+    params: {
+        anime_id: 2024,
+        fetch_episodes: "No",
+        more_info: "No",
+    },
+})
+    .then(async (res) => {
+    let keywords = res.data.response?.anime_keywords;
+    console.log("Got the anime, updating:", keywords);
+    if (!keywords) {
+        console.log("No keywords");
+    }
+    else {
+        console.log("Keywords: ", keywords);
+    }
+    return res.data;
+})
+    .catch((err) => {
+    console.log(err.message);
+    return null;
+});
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
     let docs = AnimeModal.find({
-        as_id: { $ne: null },
-        "keywords.0": { $exists: false },
+        as_id: { $gte: 0 },
     });
     let count = await docs.clone().count();
     console.log(count);
     // TODO: Update the episodes
-    let promises;
-    for await (const doc of docs) {
-        console.log("Getting anime with id: ", doc.as_id);
-        await axios({
-            method: "GET",
-            url: details_url,
-            headers: headers,
-            params: {
-                anime_id: doc.as_id,
-                fetch_episodes: "No",
-                more_info: "No",
-            },
-        })
-            .then(async (res) => {
-            console.log("Got the anime, updating...");
-            let keywords = res.data.response.data?.anime_keywords;
-            if (!keywords ||
-                keywords.length <= 2 ||
-                keywords === "," ||
-                keywords === " ," ||
-                keywords === ", ") {
-                doc.keywords = new Types.DocumentArray([doc.name]);
-            }
-            else {
-                doc.keywords = new Types.DocumentArray(keywords.split(",").filter((x) => x.length > 1));
-            }
-            await doc.save();
-            return res.data;
-        })
-            .catch((err) => {
-            console.log(err.message);
-            return null;
-        });
+    let promises = [];
+    for await (const doc of (await docs).reverse()) {
+        promises.push(updateKeywords(doc));
+        if (promises.length > 100) {
+            await Promise.all(promises);
+        }
     }
 });
+async function updateKeywords(doc) {
+    console.log("Getting anime with id: ", doc.as_id);
+    const anime = await axios({
+        method: "GET",
+        url: details_url,
+        headers: headers,
+        params: {
+            anime_id: doc.as_id,
+            fetch_episodes: "No",
+            more_info: "No",
+        },
+    })
+        .then(async (res) => {
+        res.data = res.data.response;
+        return res.data;
+    })
+        .catch((err) => {
+        console.log(err.message);
+        return null;
+    });
+    const keywords = anime.anime_keywords;
+    console.log("Got the anime, updating: ", keywords);
+    if (!keywords) {
+        doc.keywords = new Types.DocumentArray([doc.name]);
+    }
+    else {
+        doc.keywords = new Types.DocumentArray(keywords.split(",").filter((x) => x.length > 1));
+    }
+    await doc.save();
+}
