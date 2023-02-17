@@ -37,6 +37,7 @@ const T_Schema = new Schema({
 
 const EpisodeDetails = new Schema({
   id: { type: Number, default: null },
+  enId: { type: Number, default: null },
   name: { type: String, default: null },
   number: { type: String, default: null },
   thumbnailUrl: { type: String, default: null },
