@@ -141,6 +141,8 @@ mongoose.connection.on("open", async () => {
     Promise.all(promises).then(async (re) => {
       const ar = <anEpisode[]>re[0];
       const en = <zoroEpisode[]>re[1];
+      console.log(`Ar episodes for [${doc.id}] ` + ar.length);
+      console.log(`En episodes for [${doc.id}] ` + en.length);
       let count = ar.length < en.length ? ar.length : en.length;
       let episodesFinal = [];
       for (let i = 0; i < count; i++) {
@@ -157,6 +159,7 @@ mongoose.connection.on("open", async () => {
         episodesFinal.push(ep);
       }
       doc.episodes = new Types.DocumentArray(episodesFinal);
+      console.log("Updated episodes");
       await doc.save();
     });
     /* let eps = await getEpisodesList(doc.as_id);
