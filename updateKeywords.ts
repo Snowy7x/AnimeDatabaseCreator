@@ -175,12 +175,14 @@ mongoose.connection.on("open", async () => {
     justInfo: null,
     mal_id: { $ne: null },
   });
+  console.log("Animes to update:", docs_.length);
   for await (const doc_ of docs_) {
     await UpdateFull(doc_);
   }
 });
 
 async function UpdateFull(doc) {
+  console.log("Updating:", doc.id);
   await getAnime(doc.as_id).then(async (anime) => {
     const ji = anime.just_info == "Yes" || anime.just_info == "YES";
     doc.justInfo = ji;
