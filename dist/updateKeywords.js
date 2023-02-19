@@ -113,7 +113,6 @@ const MangaModal = model("Manga", MangaSchema);
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
-    return;
     // Updating the animes
     const docs_ = await AnimeModal.find({
         justInfo: null,
