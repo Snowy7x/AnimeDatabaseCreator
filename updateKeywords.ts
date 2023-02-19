@@ -20,7 +20,11 @@ import {
 import Inc from "mongoose-sequence";
 import mongoose from "./src/db/Database.js";
 import { getAnime, getEpisodesList } from "./src/sources/animeslayer.js";
-import { fetchZoroAnimeFromName } from "./src/sources/zoro.js";
+import {
+  fetchSearchZoro,
+  fetchZoroAnimeFromName,
+  fetchZoroAnimeInfo,
+} from "./src/sources/zoro.js";
 import {
   malGetAnimeWithId,
   malGetMangaWithId,
@@ -167,9 +171,11 @@ type anEpisode = {
   next_episode: anEpisode;
   previous_episode: anEpisode;
 };
+
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
+  return;
   // Updating the animes
   const docs_ = await AnimeModal.find({
     justInfo: null,
