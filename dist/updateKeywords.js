@@ -117,6 +117,7 @@ mongoose.connection.on("open", async () => {
     const docs_ = await AnimeModal.find({
         justInfo: null,
         mal_id: { $ne: null },
+        id: { $gte: 119 },
     });
     console.log("Animes to update:", docs_.length);
     for await (const doc_ of docs_) {
@@ -130,6 +131,7 @@ async function UpdateFull(doc) {
         doc.justInfo = ji;
         if (!ji) {
             let anime = await malGetAnimeWithId(doc.mal_id);
+            console.log("title:", anime.title);
             doc.name = anime.title;
             // Update Relations
             if (anime.relations && anime.relations.length > 0) {
@@ -208,7 +210,7 @@ async function UpdateFull(doc) {
                     getEpisodesList(doc.as_id).then((episodes) => resolve(episodes?.data));
                 }),
                 new Promise((resolve) => {
-                    fetchZoroAnimeFromName(anime.title).then((anime) => resolve(anime?.episodes));
+                    fetchZoroAnimeFromName(anime.title).then((an) => resolve(an?.episodes));
                 }),
             ];
             await Promise.all(promises)
