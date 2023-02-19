@@ -126,7 +126,10 @@ mongoose.connection.on("open", async () => {
 });
 async function UpdateFull(doc) {
     console.log("Updating:", doc.id);
-    await getAnime(doc.as_id).then(async (anime) => {
+    await getAnime(doc.as_id)
+        .then(async (anime) => {
+        if (!anime)
+            return console.log("Got issues with the anime");
         const ji = anime.just_info == "Yes" || anime.just_info == "YES";
         doc.justInfo = ji;
         if (!ji) {
@@ -227,7 +230,9 @@ async function UpdateFull(doc) {
                     let ep = {
                         id: arEp?.episode_id,
                         enId: enEp?.episodeId,
-                        name: enEp?.episodeName ? enEp?.episodeName : arEp?.episode_name,
+                        name: enEp?.episodeName
+                            ? enEp?.episodeName
+                            : arEp?.episode_name,
                         number: enEp?.epNum ? enEp?.epNum : arEp?.episode_number,
                         thumbnailUrl: doc?.episodes[i]?.thumbnailUrl,
                         urls: doc?.episodes[i]?.urls,
@@ -243,5 +248,6 @@ async function UpdateFull(doc) {
             });
         }
         await doc.save();
-    });
+    })
+        .catch((err) => console.log(err.message));
 }

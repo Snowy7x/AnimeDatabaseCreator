@@ -29,6 +29,7 @@ import {
   malGetAnimeWithId,
   malGetMangaWithId,
 } from "./src/sources/myanimelist.js";
+import { CONNREFUSED } from "dns";
 
 const AutoIncrement = Inc(mongoose);
 
@@ -189,135 +190,140 @@ mongoose.connection.on("open", async () => {
 
 async function UpdateFull(doc) {
   console.log("Updating:", doc.id);
-  await getAnime(doc.as_id).then(async (anime) => {
-    const ji = anime.just_info == "Yes" || anime.just_info == "YES";
-    doc.justInfo = ji;
-    if (!ji) {
-      let anime = await malGetAnimeWithId(doc.mal_id);
-      console.log("title:", anime.title);
-      doc.name = anime.title;
-      // Update Relations
-      if (anime.relations && anime.relations.length > 0) {
-        let final_relations = [];
+  await getAnime(doc.as_id)
+    .then(async (anime) => {
+      if (!anime) return console.log("Got issues with the anime");
+      const ji = anime.just_info == "Yes" || anime.just_info == "YES";
+      doc.justInfo = ji;
+      if (!ji) {
+        let anime = await malGetAnimeWithId(doc.mal_id);
+        console.log("title:", anime.title);
+        doc.name = anime.title;
+        // Update Relations
+        if (anime.relations && anime.relations.length > 0) {
+          let final_relations = [];
 
-        for await (const relation of anime.relations) {
-          if (
-            relation.relation == "Adaptation" ||
-            relation.relation == "adaptation"
-          ) {
-            const source = await malGetMangaWithId(relation.entry[0].mal_id);
-            // TODO: Add manga to manga list
-            const manga = new MangaModal({
-              mal_id: source.mal_id,
-              name: source.title,
-              description_ar: "",
-              description_en: source.synopsis,
-              coverUrl: source.images.jpg?.maximum_image_url
-                ? source.images.jpg.maximum_image_url
-                : source.images.webp?.maximum_image_url
-                ? source.images.webp.maximum_image_url
-                : null,
-              bannerUrl: source.images.jpg?.maximum_image_url
-                ? source.images.jpg.maximum_image_url
-                : source.images.webp?.maximum_image_url
-                ? source.images.webp.maximum_image_url
-                : null,
-              source: null,
-              score: source.score,
-              scored_by: source.scored_by,
-              year: source.published.from,
-              type: source.type,
-              status: source.status,
-              keywords: source.titles.map((title) => title.title),
-              genres_en: source.genres.map((genre) => ({
-                id: genre.mal_id,
-                name: genre.name,
-              })),
-              studios: source.serializations.map((ser) => ({
-                id: ser.mal_id,
-                name: ser.name,
-              })),
-            });
-            await manga.save();
-            // Add the manga
-            doc.adaptation = {
-              id: 0,
-              mal_id: source?.mal_id,
-              ani_id: -1,
-              name: source?.title,
-              coverUrl: source?.images.jpg?.maximum_image_url
-                ? source?.images.jpg.maximum_image_url
-                : source?.images.webp?.maximum_image_url
-                ? source?.images.webp.maximum_image_url
-                : null,
-              type: source.type,
-            };
-          } else {
-            for (const entry of relation.entry) {
-              const rel =
-                (await AnimeModal.findOne({ mal_id: entry.mal_id })) ?? null;
-
-              final_relations.push({
-                id: rel?.id,
-                mal_id: rel?.mal_id,
-                ani_id: rel?.ani_id,
-                as_id: rel?.as_id,
-                coverUrl: rel?.coverUrl,
-                rating: rel?.coverUrl,
-                type: rel?.type,
+          for await (const relation of anime.relations) {
+            if (
+              relation.relation == "Adaptation" ||
+              relation.relation == "adaptation"
+            ) {
+              const source = await malGetMangaWithId(relation.entry[0].mal_id);
+              // TODO: Add manga to manga list
+              const manga = new MangaModal({
+                mal_id: source.mal_id,
+                name: source.title,
+                description_ar: "",
+                description_en: source.synopsis,
+                coverUrl: source.images.jpg?.maximum_image_url
+                  ? source.images.jpg.maximum_image_url
+                  : source.images.webp?.maximum_image_url
+                  ? source.images.webp.maximum_image_url
+                  : null,
+                bannerUrl: source.images.jpg?.maximum_image_url
+                  ? source.images.jpg.maximum_image_url
+                  : source.images.webp?.maximum_image_url
+                  ? source.images.webp.maximum_image_url
+                  : null,
+                source: null,
+                score: source.score,
+                scored_by: source.scored_by,
+                year: source.published.from,
+                type: source.type,
+                status: source.status,
+                keywords: source.titles.map((title) => title.title),
+                genres_en: source.genres.map((genre) => ({
+                  id: genre.mal_id,
+                  name: genre.name,
+                })),
+                studios: source.serializations.map((ser) => ({
+                  id: ser.mal_id,
+                  name: ser.name,
+                })),
               });
+              await manga.save();
+              // Add the manga
+              doc.adaptation = {
+                id: 0,
+                mal_id: source?.mal_id,
+                ani_id: -1,
+                name: source?.title,
+                coverUrl: source?.images.jpg?.maximum_image_url
+                  ? source?.images.jpg.maximum_image_url
+                  : source?.images.webp?.maximum_image_url
+                  ? source?.images.webp.maximum_image_url
+                  : null,
+                type: source.type,
+              };
+            } else {
+              for (const entry of relation.entry) {
+                const rel =
+                  (await AnimeModal.findOne({ mal_id: entry.mal_id })) ?? null;
+
+                final_relations.push({
+                  id: rel?.id,
+                  mal_id: rel?.mal_id,
+                  ani_id: rel?.ani_id,
+                  as_id: rel?.as_id,
+                  coverUrl: rel?.coverUrl,
+                  rating: rel?.coverUrl,
+                  type: rel?.type,
+                });
+              }
             }
           }
+          doc.relations = final_relations;
         }
-        doc.relations = final_relations;
+
+        // Update Episodes:
+        const promises = [
+          new Promise<anEpisode[]>((resolve) => {
+            getEpisodesList(doc.as_id).then((episodes) =>
+              resolve(episodes?.data)
+            );
+          }),
+          new Promise<zoroEpisode[]>((resolve) => {
+            fetchZoroAnimeFromName(anime.title).then((an) =>
+              resolve(an?.episodes)
+            );
+          }),
+        ];
+
+        await Promise.all(promises)
+          .then(async (re) => {
+            const ar = <anEpisode[]>re[0];
+            const en = <zoroEpisode[]>re[1];
+            console.log(`Ar episodes for [${doc.id}] ` + ar.length);
+            console.log(`En episodes for [${doc.id}] ` + en.length);
+            let count = ar.length < en.length ? ar.length : en.length;
+            let episodesFinal = [];
+            for (let i = 0; i < count; i++) {
+              const arEp = ar[i];
+              const enEp = en[i];
+              let ep = {
+                id: arEp?.episode_id,
+                enId: enEp?.episodeId,
+                name: enEp?.episodeName
+                  ? enEp?.episodeName
+                  : arEp?.episode_name,
+                number: enEp?.epNum ? enEp?.epNum : arEp?.episode_number,
+                thumbnailUrl: doc?.episodes[i]?.thumbnailUrl,
+                urls: doc?.episodes[i]?.urls,
+              };
+              episodesFinal.push(ep);
+            }
+            doc.episodes = new Types.DocumentArray(episodesFinal);
+            console.log("Updated episodes");
+            await doc.save();
+          })
+          .catch((err) => {
+            console.log(
+              `Error saving episodes for [${doc.id}] because:`,
+              err.message
+            );
+          });
       }
-
-      // Update Episodes:
-      const promises = [
-        new Promise<anEpisode[]>((resolve) => {
-          getEpisodesList(doc.as_id).then((episodes) =>
-            resolve(episodes?.data)
-          );
-        }),
-        new Promise<zoroEpisode[]>((resolve) => {
-          fetchZoroAnimeFromName(anime.title).then((an) =>
-            resolve(an?.episodes)
-          );
-        }),
-      ];
-
-      await Promise.all(promises)
-        .then(async (re) => {
-          const ar = <anEpisode[]>re[0];
-          const en = <zoroEpisode[]>re[1];
-          console.log(`Ar episodes for [${doc.id}] ` + ar.length);
-          console.log(`En episodes for [${doc.id}] ` + en.length);
-          let count = ar.length < en.length ? ar.length : en.length;
-          let episodesFinal = [];
-          for (let i = 0; i < count; i++) {
-            const arEp = ar[i];
-            const enEp = en[i];
-            let ep = {
-              id: arEp?.episode_id,
-              enId: enEp?.episodeId,
-              name: enEp?.episodeName ? enEp?.episodeName : arEp?.episode_name,
-              number: enEp?.epNum ? enEp?.epNum : arEp?.episode_number,
-              thumbnailUrl: doc?.episodes[i]?.thumbnailUrl,
-              urls: doc?.episodes[i]?.urls,
-            };
-            episodesFinal.push(ep);
-          }
-          doc.episodes = new Types.DocumentArray(episodesFinal);
-          console.log("Updated episodes");
-          await doc.save();
-        })
-        .catch((err) => {
-          console.log(
-            `Error saving episodes for [${doc.id}] because:`,
-            err.message
-          );
-        });
-    }
-    await doc.save();
-  });
+      await doc.save();
+    })
+    .catch((err) => console.log(err.message));
 }
