@@ -68,6 +68,7 @@ const AnimeSchema = new Schema({
   mal_id: { type: Number, default: null },
   ani_id: { type: Number, default: null },
   as_id: { type: Number, default: null },
+  justInfo: { type: Boolean, default: false },
 
   name: { type: String, default: null },
   description_ar: { type: String, default: null },
@@ -148,10 +149,12 @@ mongoose.connection.on("open", async () => {
   // TODO: Update the episodes
   for await (const doc of (await docs).reverse()) {
     let eps = await getEpisodesList(doc.as_id);
+
     if (eps.code === 400 || eps === null || eps.data.length === 0) {
       console.log("No episodes found for", doc.id);
       continue;
     }
+
     if (doc.episodes.length >= eps.data.length) continue;
     console.log(`Fetching episodes watch links[${doc.id}]: ` + eps.data.length);
     let videos = [];

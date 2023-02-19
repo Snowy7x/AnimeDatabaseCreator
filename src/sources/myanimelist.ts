@@ -4,13 +4,15 @@ import {
   SearchOrder,
   SortOptions,
   Anime,
+  JikanClient,
+  Manga,
 } from "@tutkli/jikan-ts";
 import axios from "axios";
 
-const client = new AnimeClient();
+const client = new JikanClient();
 
 async function Search(animeName: string) {
-  return await client
+  return await client.anime
     .getAnimeSearch({
       q: animeName,
       order_by: SearchOrder.title,
@@ -46,7 +48,7 @@ async function getAnimeByNameWithEpisodes(
 ): Promise<FullAnime> {
   let anime = await getAnimeByName(animeName);
 
-  let episodeVideos = await client
+  let episodeVideos = await client.anime
     .getAnimeEpisodeVideos(anime.mal_id)
     .then((re) => re.data);
   await sleep(1000);
@@ -98,6 +100,32 @@ async function getEpisodesWithId(
 
   await sleep(1000);
   return data;
+}
+
+export async function malGetAnimeWithId(mal_id: number): Promise<Anime> {
+  let anime = null;
+  let i = 0;
+  while (anime === null && i < 5) {
+    anime = client.anime
+      .getAnimeById(mal_id)
+      .then((res) => res.data)
+      .catch(() => null);
+    sleep(2000);
+  }
+  return anime;
+}
+
+export async function malGetMangaWithId(mal_id: number): Promise<Manga> {
+  let manga = null;
+  let i = 0;
+  while (manga === null && i < 5) {
+    manga = client.manga
+      .getMangaById(mal_id)
+      .then((res) => res.data)
+      .catch(() => null);
+    sleep(2000);
+  }
+  return manga;
 }
 
 export {

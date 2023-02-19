@@ -50,6 +50,7 @@ const AnimeSchema = new Schema({
     mal_id: { type: Number, default: null },
     ani_id: { type: Number, default: null },
     as_id: { type: Number, default: null },
+    justInfo: { type: Boolean, default: false },
     name: { type: String, default: null },
     description_ar: { type: String, default: null },
     description_en: { type: String, default: null },
