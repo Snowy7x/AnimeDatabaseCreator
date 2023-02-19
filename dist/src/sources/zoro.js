@@ -142,6 +142,6 @@ export const fetchZoroEpisodeSource = async ({ episodeId, type = 1 }) => {
 };
 export const fetchZoroAnimeFromName = async (animeName) => {
     let animes = await fetchSearchZoro({ keyw: animeName });
-    const bestMatch = animes.filter(anime.animeTitle === animeName);
+    const bestMatch = animes.filter((anime) => anime.animeTitle === animeName);
     return await fetchZoroAnimeInfo({ zoroId: animeMatch.animeId });
 };
