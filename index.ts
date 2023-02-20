@@ -264,7 +264,7 @@ async function updateTopAnime() {
     const anime = await AnimeModal.findOne({ as_id: an.anime_id });
     console.log("Anime:", anime.name);
     let topAnime = await topAnimeModal.findOne({ rank: i });
-    if (!topAnime) {
+    if (topAnime) {
       topAnime.id = anime.id;
       topAnime.mal_id = anime.mal_id;
       topAnime.ani_id = anime.ani_id;
