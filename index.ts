@@ -204,9 +204,15 @@ updateLatestEpisodes();
 
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
-mongoose.connection.on("open", async () => {});
+mongoose.connection.on("open", async () => {
+  setInterval(() => {
+    updateLatestEpisodes();
+    updateTopAnime();
+  }, 1000 * 60 * 10);
+});
 
 async function updateLatestEpisodes() {
+  console.log("Update latest episodes");
   //  TODO: Update the latest episodes
   const latestEpisodes = await getAnimeList("latest_episodes", 1, 0).then(
     (r) => r.data
@@ -244,6 +250,7 @@ async function updateLatestEpisodes() {
 }
 
 async function updateTopAnime() {
+  console.log("Updating top animes");
   // TODO: Update the top animes
   const topAnimes = await getAnimeList("top_currently_airing_mal", 1, 0).then(
     (r) => r.data
