@@ -144,19 +144,20 @@ const AnimeModal = model("Anime", AnimeSchema);
 const MangaModal = model("Manga", MangaSchema);
 const LatestEpisodeModal = model("LatestEpisode", LatestEpisodeSchema);
 const topAnimeModal = model("topAnime", topAnimeSchema);
-updateLatestEpisodes();
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
+    updateTopAnime();
+    updateLatestEpisodes();
     setInterval(() => {
-        updateLatestEpisodes();
         updateTopAnime();
+        updateLatestEpisodes();
     }, 1000 * 60 * 10);
 });
 async function updateLatestEpisodes() {
     console.log("Update latest episodes");
     //  TODO: Update the latest episodes
-    const latestEpisodes = await getAnimeList("latest_episodes", 1, 0).then((r) => r.data);
+    const latestEpisodes = await getAnimeList("latest_episodes", 100, 0).then((r) => r.data);
     for await (let episode of latestEpisodes) {
         const anime = await AnimeModal.findOne({ as_id: episode.anime_id });
         let zoroAnime = await fetchZoroAnimeFromName(anime.name).then((an) => an?.episodes[an?.episodes?.length - 1]);
@@ -179,7 +180,7 @@ async function updateLatestEpisodes() {
             genres_en: anime.genres_en,
         });
         await latestEpisode.save();
-        await UpdateFull(anime);
+        //await UpdateFull(anime);
     }
 }
 async function updateTopAnime() {
