@@ -109,8 +109,10 @@ export async function malGetAnimeWithId(mal_id: number): Promise<Anime> {
     anime = client.anime
       .getAnimeById(mal_id)
       .then((res) => res.data)
-      .catch(() => null);
-    sleep(2000);
+      .catch(async () => {
+        await sleep(1000);
+        return null;
+      });
   }
   return anime;
 }
