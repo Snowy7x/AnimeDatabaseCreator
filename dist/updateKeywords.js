@@ -110,10 +110,15 @@ MangaSchema.plugin(AutoIncrement, { inc_field: "id" });
 //AnimeSchema.plugin(AutoIncrement, { inc_field: "id" });
 const AnimeModal = model("Anime", AnimeSchema);
 const MangaModal = model("Manga", MangaSchema);
-fetchZoroAnimeFromName("One Piece Movie 09: Episode of Chopper Plus - Fuyu ni Saku, Kiseki no Sakura").then((r) => console.log(r));
+/* fetchZoroAnimeFromName(
+  "One Piece Movie 09: Episode of Chopper Plus - Fuyu ni Saku, Kiseki no Sakura"
+).then((r) => console.log(r));
+ */
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
+    //  const doc = await AnimeModal.findOne({ id: 322 });
+    //  UpdateFull(doc);
     // Updating the animes
     const docs_ = await AnimeModal.find({
         justInfo: null,
@@ -139,6 +144,7 @@ async function UpdateFull(doc) {
             doc.name = anime.title;
             // Update Relations
             if (anime.relations && anime.relations.length > 0) {
+                console.log("Updating relations:", anime.relations.length);
                 let final_relations = [];
                 for await (const relation of anime.relations) {
                     if (relation.relation == "Adaptation" ||
@@ -207,6 +213,9 @@ async function UpdateFull(doc) {
                     }
                 }
                 doc.relations = final_relations;
+            }
+            else {
+                console.log("No Relations found for this anime");
             }
             // Update Episodes:
             const promises = [

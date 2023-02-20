@@ -107,7 +107,7 @@ export async function malGetAnimeWithId(mal_id: number): Promise<Anime> {
   let i = 0;
   while (anime === null && i < 5) {
     anime = client.anime
-      .getAnimeById(mal_id)
+      .getAnimeFullById(mal_id)
       .then((res) => res.data)
       .catch(async () => {
         await sleep(1000);
@@ -122,7 +122,7 @@ export async function malGetMangaWithId(mal_id: number): Promise<Manga> {
   let i = 0;
   while (manga === null && i < 5) {
     manga = client.manga
-      .getMangaById(mal_id)
+      .getMangaFullById(mal_id)
       .then((res) => res.data)
       .catch(() => null);
     sleep(2000);

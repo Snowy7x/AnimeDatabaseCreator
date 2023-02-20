@@ -173,13 +173,16 @@ type anEpisode = {
   previous_episode: anEpisode;
 };
 
-fetchZoroAnimeFromName(
+/* fetchZoroAnimeFromName(
   "One Piece Movie 09: Episode of Chopper Plus - Fuyu ni Saku, Kiseki no Sakura"
 ).then((r) => console.log(r));
-
+ */
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
+  //  const doc = await AnimeModal.findOne({ id: 322 });
+  //  UpdateFull(doc);
+
   // Updating the animes
   const docs_ = await AnimeModal.find({
     justInfo: null,
@@ -203,8 +206,10 @@ async function UpdateFull(doc) {
         let anime = await malGetAnimeWithId(doc.mal_id);
         console.log("title:", anime.title);
         doc.name = anime.title;
+
         // Update Relations
         if (anime.relations && anime.relations.length > 0) {
+          console.log("Updating relations:", anime.relations.length);
           let final_relations = [];
 
           for await (const relation of anime.relations) {
@@ -277,6 +282,8 @@ async function UpdateFull(doc) {
             }
           }
           doc.relations = final_relations;
+        } else {
+          console.log("No Relations found for this anime");
         }
 
         // Update Episodes:
