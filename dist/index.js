@@ -160,13 +160,14 @@ async function updateLatestEpisodes() {
     const latestEpisodes = await getAnimeList("latest_episodes", 100, 0).then((r) => r.data);
     for await (let episode of latestEpisodes) {
         const anime = await AnimeModal.findOne({ as_id: episode.anime_id });
-        let zoroAnime = await fetchZoroAnimeFromName(anime.name).then((an) => an?.episodes[an?.episodes?.length - 1]);
+        let zoroAnime = await fetchZoroAnimeFromName(anime.name).then((an) => Array.isArray(an?.episodes) ? an?.episodes[an?.episodes?.length - 1] : {});
+        console.log("Episode:", anime.name);
         const latestEpisode = new LatestEpisodeModal({
             id: anime.id,
             mal_id: anime.mal_id,
             ani_id: anime.ani_id,
-            epId: episode.latest_episode_id,
-            epIdEn: zoroAnime[zoroAnime?.length - 1]?.episodeId,
+            epId: episode?.latest_episode_id,
+            epIdEn: zoroAnime?.episodeId,
             epNumber: episode.latest_episode_name.replace("الحلقة : ", ""),
             name: anime.name,
             description_ar: anime.description_ar,
@@ -190,6 +191,7 @@ async function updateTopAnime() {
     let i = 1;
     for await (let an of topAnimes) {
         const anime = await AnimeModal.findOne({ as_id: an.anime_id });
+        console.log("Anime:", anime.name);
         const topAnime = new topAnimeModal({
             id: anime.id,
             mal_id: anime.mal_id,
