@@ -151,35 +151,38 @@ async function UpdateFull(doc) {
                     if (relation.relation == "Adaptation" ||
                         relation.relation == "adaptation") {
                         const source = await malGetMangaWithId(relation.entry[0].mal_id);
-                        console.log("Adaptation:", source);
-                        // TODO: Add manga to manga list
-                        const manga = new MangaModal({
-                            mal_id: source.mal_id,
-                            name: source.title,
-                            description_ar: "",
-                            description_en: source.synopsis,
-                            coverUrl: source.images.jpg.image_url,
-                            bannerUrl: source.images.jpg.image_url,
-                            source: null,
-                            score: source.score,
-                            scored_by: source.scored_by,
-                            year: source.published.from.split("-").shift(),
-                            type: source.type,
-                            status: source.status,
-                            keywords: source.titles.map((title) => title.title),
-                            genres_en: source.genres.map((genre) => ({
-                                id: genre.mal_id,
-                                name: genre.name,
-                            })),
-                            studios: source.serializations.map((ser) => ({
-                                id: ser.mal_id,
-                                name: ser.name,
-                            })),
-                        });
-                        await manga.save();
+                        console.log("Adaptation:", source.title);
+                        // Updating manga info:
+                        let manga = await MangaModal.findOne({ mal_id: source.mal_id });
+                        if (!manga) {
+                            manga = new MangaModal({
+                                mal_id: source.mal_id,
+                                name: source.title,
+                                description_ar: "",
+                                description_en: source.synopsis,
+                                coverUrl: source.images.jpg.image_url,
+                                bannerUrl: source.images.jpg.image_url,
+                                source: null,
+                                score: source.score,
+                                scored_by: source.scored_by,
+                                year: source.published.from.split("-").shift(),
+                                type: source.type,
+                                status: source.status,
+                                keywords: source.titles.map((title) => title.title),
+                                genres_en: source.genres.map((genre) => ({
+                                    id: genre.mal_id,
+                                    name: genre.name,
+                                })),
+                                studios: source.serializations.map((ser) => ({
+                                    id: ser.mal_id,
+                                    name: ser.name,
+                                })),
+                            });
+                            await manga.save();
+                        }
                         // Add the manga
                         doc.adaptation = {
-                            id: 0,
+                            id: manga.id,
                             mal_id: source?.mal_id,
                             ani_id: -1,
                             name: source?.title,
