@@ -92,8 +92,10 @@ export async function malGetMangaWithId(mal_id) {
         manga = client.manga
             .getMangaFullById(mal_id)
             .then((res) => res.data)
-            .catch(() => null);
-        sleep(2000);
+            .catch(async () => {
+            await sleep(1000);
+            return null;
+        });
     }
     return manga;
 }
