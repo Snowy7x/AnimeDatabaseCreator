@@ -186,7 +186,7 @@ export const fetchZoroAnimeFromName = async (animeName) => {
   let animes = await fetchSearchZoro({
     keyw: animeName.replaceAll("%20", "+").replaceAll("&", "%26"),
   });
-  if (!Array.isArray(animes)) {
+  if (!Array.isArray(animes) || animes.length < 1) {
     return {};
   }
   const bestMatch = findBestMatch(
