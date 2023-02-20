@@ -210,7 +210,9 @@ async function updateTopAnime() {
             genres_ar: anime.genres_ar,
             genres_en: anime.genres_en,
         });
-        await topAnime.save();
+        let topAnimeData = topAnime.toObject();
+        delete topAnimeData._id;
+        topAnimeModal.updateOne({ rank: i }, topAnimeData, { upsert: true });
         i++;
     }
 }
