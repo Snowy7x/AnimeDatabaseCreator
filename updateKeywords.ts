@@ -180,9 +180,9 @@ type anEpisode = {
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
-  const doc = await AnimeModal.findOne({ id: 343 });
-  UpdateFull(doc);
-  return;
+  //const doc = await AnimeModal.findOne({ id: 343 });
+  //UpdateFull(doc);
+  //return;
   // Updating the animes
   const docs_ = await AnimeModal.find({
     justInfo: null,
