@@ -113,7 +113,7 @@ const LatestEpisodeSchema = new Schema({
     ani_id: { type: Number, default: null },
     epId: { type: Number, default: null },
     epIdEn: { type: String, default: null },
-    epNumber: { type: Number, default: null },
+    epNumber: { type: String, default: null },
     name: { type: String, default: null },
     description_ar: { type: String, default: null },
     description_en: { type: String, default: null },
