@@ -114,7 +114,6 @@ fetchZoroAnimeFromName("One Piece Movie 09: Episode of Chopper Plus - Fuyu ni Sa
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
-    return;
     // Updating the animes
     const docs_ = await AnimeModal.find({
         justInfo: null,
