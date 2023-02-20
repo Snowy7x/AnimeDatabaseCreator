@@ -172,6 +172,7 @@ const topAnimeSchema = new Schema({
   description_en: { type: String, default: null },
   coverUrl: { type: String, default: null },
 
+  rank: { type: Number, default: null },
   score: { type: Number, default: null },
   scored_by: { type: Number, default: null },
 
@@ -262,31 +263,46 @@ async function updateTopAnime() {
   for await (let an of topAnimes) {
     const anime = await AnimeModal.findOne({ as_id: an.anime_id });
     console.log("Anime:", anime.name);
-    const topAnime = new topAnimeModal({
-      id: anime.id,
-      mal_id: anime.mal_id,
-      ani_id: anime.ani_id,
+    let topAnime = await topAnimeModal.findOne({ rank: i });
+    if (!topAnime) {
+      topAnime.id = anime.id;
+      topAnime.mal_id = anime.mal_id;
+      topAnime.ani_id = anime.ani_id;
+      topAnime.name = anime.name;
+      topAnime.description_ar = anime.description_ar;
+      topAnime.description_en = anime.description_en;
+      topAnime.coverUrl = anime.coverUrl;
+      topAnime.rank = i;
+      topAnime.score = anime.score;
+      topAnime.scored_by = anime.scored_by;
+      topAnime.type = anime.type;
+      topAnime.status = anime.status;
+      topAnime.genres_ar = anime.genres_ar;
+      topAnime.genres_en = anime.genres_en;
+    } else {
+      topAnime = new topAnimeModal({
+        id: anime.id,
+        mal_id: anime.mal_id,
+        ani_id: anime.ani_id,
 
-      name: anime.name,
-      description_ar: anime.description_ar,
-      description_en: anime.description_en,
-      coverUrl: anime.coverUrl,
+        name: anime.name,
+        description_ar: anime.description_ar,
+        description_en: anime.description_en,
+        coverUrl: anime.coverUrl,
 
-      rank: i,
-      score: anime.score,
-      scored_by: anime.scored_by,
+        rank: i,
+        score: anime.score,
+        scored_by: anime.scored_by,
 
-      type: anime.type,
-      status: anime.status,
+        type: anime.type,
+        status: anime.status,
 
-      genres_ar: anime.genres_ar,
-      genres_en: anime.genres_en,
-    });
+        genres_ar: anime.genres_ar,
+        genres_en: anime.genres_en,
+      });
+    }
 
-    let topAnimeData = topAnime.toObject();
-    delete topAnimeData._id;
-
-    topAnimeModal.updateOne({ rank: i }, topAnimeData, { upsert: true });
+    await topAnime.save();
     i++;
   }
 }
