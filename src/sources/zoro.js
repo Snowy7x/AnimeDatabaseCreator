@@ -1,4 +1,6 @@
 import axios from "axios";
+import { compareTwoStrings, findBestMatch } from "string-similarity";
+
 import { load } from "cheerio";
 import pkg from "match-sorter";
 const matchSorter = pkg.default;
@@ -14,6 +16,10 @@ const headerOption = {
 
 import { scrapeSource } from "./helpers/rapid-cloud.js";
 
+/**
+ *
+ * @returns {{animeTitle: string,animeId: string,  animeImg: string}[] || {error: string, error_message: string}}
+ */
 export const fetchSearchZoro = async ({ list = [], keyw, page = 1 }) => {
   try {
     if (!keyw)
@@ -180,9 +186,16 @@ export const fetchZoroAnimeFromName = async (animeName) => {
   let animes = await fetchSearchZoro({
     keyw: animeName.replaceAll("%20", "+").replaceAll("&", "%26"),
   });
-  if (animes.error) {
+  if (!Array.isArray(animes)) {
     return {};
   }
-  const bestMatch = animes?.filter((anime) => anime.animeTitle === animeName);
-  return await fetchZoroAnimeInfo({ zoroId: bestMatch.animeId });
+  const bestMatch = findBestMatch(
+    animeName,
+    animes.map((x) => x.animeTitle)
+  ).bestMatch;
+  if (bestMatch.rating < 0.9) return {};
+
+  const anime = animes.find((x) => x.animeTitle === bestMatch.target);
+  if (!anime) return {};
+  return await fetchZoroAnimeInfo({ zoroId: anime.animeId });
 };

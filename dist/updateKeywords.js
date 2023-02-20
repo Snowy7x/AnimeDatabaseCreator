@@ -110,9 +110,11 @@ MangaSchema.plugin(AutoIncrement, { inc_field: "id" });
 //AnimeSchema.plugin(AutoIncrement, { inc_field: "id" });
 const AnimeModal = model("Anime", AnimeSchema);
 const MangaModal = model("Manga", MangaSchema);
+fetchZoroAnimeFromName("One Piece Movie 09: Episode of Chopper Plus - Fuyu ni Saku, Kiseki no Sakura").then((r) => console.log(r));
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
+    return;
     // Updating the animes
     const docs_ = await AnimeModal.find({
         justInfo: null,

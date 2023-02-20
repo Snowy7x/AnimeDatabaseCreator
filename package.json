@@ -28,7 +28,8 @@
     "mal-scraper": "^2.11.4",
     "mongoose": "^6.9.1",
     "mongoose-sequence": "^5.3.1",
-    "rncryptor-node": "^0.0.2"
+    "rncryptor-node": "^0.0.2",
+    "string-similarity": "^4.0.4"
   },
   "devDependencies": {
     "@types/express": "^4.17.17",
