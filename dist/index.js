@@ -168,7 +168,9 @@ async function updateLatestEpisodes() {
             ani_id: anime.ani_id,
             epId: episode?.latest_episode_id,
             epIdEn: zoroAnime?.episodeId,
-            epNumber: episode.latest_episode_name.replace("الحلقة : ", ""),
+            epNumber: episode.latest_episode_name
+                .replace("الحلقة : ", "")
+                .replace(" - فلر", ""),
             name: anime.name,
             description_ar: anime.description_ar,
             description_en: anime.description_en,
@@ -187,7 +189,7 @@ async function updateLatestEpisodes() {
 async function updateTopAnime() {
     console.log("Updating top animes");
     // TODO: Update the top animes
-    const topAnimes = await getAnimeList("top_currently_airing_mal", 1, 0).then((r) => r.data);
+    const topAnimes = await getAnimeList("top_currently_airing_mal", 100, 0).then((r) => r.data);
     let i = 1;
     for await (let an of topAnimes) {
         const anime = await AnimeModal.findOne({ as_id: an.anime_id });
