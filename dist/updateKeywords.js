@@ -117,8 +117,9 @@ const MangaModal = model("Manga", MangaSchema);
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
-    //  const doc = await AnimeModal.findOne({ id: 322 });
-    //  UpdateFull(doc);
+    const doc = await AnimeModal.findOne({ id: 343 });
+    UpdateFull(doc);
+    return;
     // Updating the animes
     const docs_ = await AnimeModal.find({
         justInfo: null,
@@ -150,26 +151,19 @@ async function UpdateFull(doc) {
                     if (relation.relation == "Adaptation" ||
                         relation.relation == "adaptation") {
                         const source = await malGetMangaWithId(relation.entry[0].mal_id);
+                        console.log("Adaptation:", source);
                         // TODO: Add manga to manga list
                         const manga = new MangaModal({
                             mal_id: source.mal_id,
                             name: source.title,
                             description_ar: "",
                             description_en: source.synopsis,
-                            coverUrl: source.images.jpg?.maximum_image_url
-                                ? source.images.jpg.maximum_image_url
-                                : source.images.webp?.maximum_image_url
-                                    ? source.images.webp.maximum_image_url
-                                    : null,
-                            bannerUrl: source.images.jpg?.maximum_image_url
-                                ? source.images.jpg.maximum_image_url
-                                : source.images.webp?.maximum_image_url
-                                    ? source.images.webp.maximum_image_url
-                                    : null,
+                            coverUrl: source.images.jpg.image_url,
+                            bannerUrl: source.images.jpg.image_url,
                             source: null,
                             score: source.score,
                             scored_by: source.scored_by,
-                            year: source.published.from,
+                            year: source.published.from.split("-").shift(),
                             type: source.type,
                             status: source.status,
                             keywords: source.titles.map((title) => title.title),
@@ -206,7 +200,7 @@ async function UpdateFull(doc) {
                                 ani_id: rel?.ani_id,
                                 as_id: rel?.as_id,
                                 coverUrl: rel?.coverUrl,
-                                rating: rel?.coverUrl,
+                                rating: rel?.score,
                                 type: rel?.type,
                             });
                         }
