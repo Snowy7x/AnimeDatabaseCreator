@@ -208,8 +208,11 @@ mongoose.connection.on("open", async () => {
   updateLatestEpisodes();
   setInterval(() => {
     updateTopAnime();
+  }, 1000 * 60 * 60 * 24);
+
+  setInterval(() => {
     updateLatestEpisodes();
-  }, 1000 * 60 * 10);
+  }, 1000 * 60 * 30);
 });
 
 async function updateLatestEpisodes() {
