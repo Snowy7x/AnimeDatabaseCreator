@@ -233,8 +233,8 @@ async function UpdateFull(doc) {
             ];
             await Promise.all(promises)
                 .then(async (re) => {
-                const ar = re[0];
-                const en = re[1];
+                const ar = Array.isArray(re[0]) ? re[0] : [];
+                const en = Array.isArray(re[1]) ? re[1] : [];
                 console.log(`Ar episodes for [${doc.id}] ` + ar.length);
                 console.log(`En episodes for [${doc.id}] ` + en.length);
                 let count = ar.length < en.length ? ar.length : en.length;
