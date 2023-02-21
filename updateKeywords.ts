@@ -26,6 +26,7 @@ import {
   fetchZoroAnimeInfo,
 } from "./src/sources/zoro.js";
 import {
+  getAnimeByNameWithEpisodes,
   malGetAnimeWithId,
   malGetMangaWithId,
 } from "./src/sources/myanimelist.js";
@@ -52,6 +53,8 @@ const Relation = new Schema({
   mal_id: { type: Number, default: null },
   ani_id: { type: Number, default: null },
   as_id: { type: Number, default: null },
+  name: { type: String, default: null },
+
   coverUrl: { type: String, default: null },
   rating: { type: Number, default: null },
   type: { type: String, default: null },
@@ -63,7 +66,10 @@ const Recommendation = new Schema({
   ani_id: { type: Number, default: null },
   as_id: { type: Number, default: null },
   name: { type: String, default: null },
+
   coverUrl: { type: String, default: null },
+  rating: { type: Number, default: null },
+  type: { type: String, default: null },
 });
 
 const Adaption = new Schema({
@@ -108,6 +114,7 @@ const AnimeSchema = new Schema({
   episodes: [EpisodeDetails],
   relations: [Relation],
   recommended: [Recommendation],
+  updated: { type: Boolean, default: false },
 });
 
 const MangaSchema = new Schema({
@@ -179,22 +186,23 @@ type anEpisode = {
  */
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
+//getAnimeByNameWithEpisodes(49387).then((r) => console.log(r.episodeVideos[0]));
+
 mongoose.connection.on("open", async () => {
   //const doc = await AnimeModal.findOne({ id: 343 });
   //UpdateFull(doc);
   //return;
   // Updating the animes
   const docs_ = await AnimeModal.find({
-    justInfo: null,
+    justInfo: false,
+    updated: null,
     mal_id: { $ne: null },
-    id: { $gte: 119 },
   });
   console.log("Animes to update:", docs_.length);
   for await (const doc_ of docs_) {
     await UpdateFull(doc_);
   }
 });
-
 async function UpdateFull(doc) {
   console.log("Updating:", doc.id);
   await getAnime(doc.as_id)
@@ -203,7 +211,7 @@ async function UpdateFull(doc) {
       const ji = anime.just_info == "Yes" || anime.just_info == "YES";
       doc.justInfo = ji;
       if (!ji) {
-        let anime = await malGetAnimeWithId(doc.mal_id);
+        let anime = await getAnimeByNameWithEpisodes(doc.mal_id);
         console.log("title:", anime.title);
         doc.name = anime.title;
 
@@ -250,29 +258,33 @@ async function UpdateFull(doc) {
               // Add the manga
               doc.adaptation = {
                 id: manga.id,
-                mal_id: source?.mal_id,
+                mal_id: source.mal_id,
                 ani_id: -1,
-                name: source?.title,
-                coverUrl: source?.images.jpg?.maximum_image_url
-                  ? source?.images.jpg.maximum_image_url
-                  : source?.images.webp?.maximum_image_url
-                  ? source?.images.webp.maximum_image_url
-                  : null,
+                name: source.title,
+                coverUrl: source.images.jpg.maximum_image_url,
                 type: source.type,
               };
             } else {
               for (const entry of relation.entry) {
-                const rel =
-                  (await AnimeModal.findOne({ mal_id: entry.mal_id })) ?? null;
+                const rel = await AnimeModal.find({
+                  mal_id: entry.mal_id,
+                })
+                  .then((r) => (r.length > 0 ? r[0] : null))
+                  .catch(() => null);
+
+                if (rel === null) {
+                  console.log("No anime with mal_id: " + entry.mal_id);
+                  continue;
+                }
 
                 final_relations.push({
-                  id: rel?.id,
-                  mal_id: rel?.mal_id,
-                  ani_id: rel?.ani_id,
-                  as_id: rel?.as_id,
-                  coverUrl: rel?.coverUrl,
-                  rating: rel?.score,
-                  type: rel?.type,
+                  id: rel.id,
+                  mal_id: rel.mal_id,
+                  ani_id: rel.ani_id,
+                  as_id: rel.as_id,
+                  coverUrl: rel.coverUrl,
+                  rating: rel.score,
+                  type: rel.type,
                 });
               }
             }
@@ -307,14 +319,17 @@ async function UpdateFull(doc) {
             for (let i = 0; i < count; i++) {
               const arEp = ar[i];
               const enEp = en[i];
+              const num = enEp?.epNum ? enEp?.epNum : arEp?.episode_number;
               let ep = {
                 id: arEp?.episode_id,
                 enId: enEp?.episodeId,
                 name: enEp?.episodeName
                   ? enEp?.episodeName
                   : arEp?.episode_name,
-                number: enEp?.epNum ? enEp?.epNum : arEp?.episode_number,
-                thumbnailUrl: doc?.episodes[i]?.thumbnailUrl,
+                number: num,
+                thumbnailUrl: anime.episodeVideos.find(
+                  (x) => x.episode.replace("Episode ", "") == num
+                ).images.jpg.image_url,
                 urls: doc?.episodes[i]?.urls,
               };
               episodesFinal.push(ep);

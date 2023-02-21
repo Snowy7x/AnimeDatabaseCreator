@@ -26,7 +26,7 @@ function sleep(ms) {
     });
 }
 async function getAnimeByNameWithEpisodes(animeName) {
-    let anime = await getAnimeByName(animeName);
+    let anime = await malGetAnimeWithId(animeName);
     let episodeVideos = await client.anime
         .getAnimeEpisodeVideos(anime.mal_id)
         .then((re) => re.data);
@@ -74,12 +74,12 @@ async function getEpisodesWithId(id, page = 1, tries = 0) {
 export async function malGetAnimeWithId(mal_id) {
     let anime = null;
     let i = 0;
-    while (anime === null && i < 5) {
+    while (anime === null && i < 10) {
         anime = client.anime
             .getAnimeFullById(mal_id)
             .then((res) => res.data)
             .catch(async () => {
-            await sleep(1000);
+            await sleep(2000);
             return null;
         });
     }

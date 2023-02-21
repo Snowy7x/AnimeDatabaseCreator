@@ -379,33 +379,29 @@ async function UpdateFull(doc) {
               // Add the manga
               doc.adaptation = {
                 id: manga.id,
-                mal_id: source.mal_id,
+                mal_id: source?.mal_id,
                 ani_id: -1,
-                name: source.title,
-                coverUrl: source.images.jpg.maximum_image_url,
+                name: source?.title,
+                coverUrl: source?.images.jpg?.maximum_image_url
+                  ? source?.images.jpg.maximum_image_url
+                  : source?.images.webp?.maximum_image_url
+                  ? source?.images.webp.maximum_image_url
+                  : null,
                 type: source.type,
               };
             } else {
               for (const entry of relation.entry) {
-                const rel = await AnimeModal.find({
-                  mal_id: entry.mal_id,
-                })
-                  .then((r) => (r.length > 0 ? r[0] : null))
-                  .catch(() => null);
-
-                if (rel === null) {
-                  console.log("No anime with mal_id: " + entry.mal_id);
-                  continue;
-                }
+                const rel =
+                  (await AnimeModal.findOne({ mal_id: entry.mal_id })) ?? null;
 
                 final_relations.push({
-                  id: rel.id,
-                  mal_id: rel.mal_id,
-                  ani_id: rel.ani_id,
-                  as_id: rel.as_id,
-                  coverUrl: rel.coverUrl,
-                  rating: rel.score,
-                  type: rel.type,
+                  id: rel?.id,
+                  mal_id: rel?.mal_id,
+                  ani_id: rel?.ani_id,
+                  as_id: rel?.as_id,
+                  coverUrl: rel?.coverUrl,
+                  rating: rel?.score,
+                  type: rel?.type,
                 });
               }
             }
