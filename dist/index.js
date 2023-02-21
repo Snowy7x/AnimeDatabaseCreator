@@ -161,6 +161,11 @@ async function updateLatestEpisodes() {
     const latestEpisodes = await getAnimeList("latest_episodes", 100, 0).then((r) => r.data);
     for await (let episode of latestEpisodes) {
         const anime = await AnimeModal.findOne({ as_id: episode.anime_id });
+        if ((await LatestEpisodeModal.find({
+            id: anime.id,
+            epId: episode?.latest_episode_id,
+        })).length <= 0)
+            continue;
         let zoroAnime = await fetchZoroAnimeFromName(anime.name).then((an) => Array.isArray(an?.episodes) ? an?.episodes[an?.episodes?.length - 1] : {});
         console.log("Episode:", anime.name);
         const latestEpisode = new LatestEpisodeModal({
