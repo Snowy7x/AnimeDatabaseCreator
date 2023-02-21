@@ -322,3 +322,4 @@ async function updateTopAnime() {
     await topAnime.save();
     i++;
   }
+}
