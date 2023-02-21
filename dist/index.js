@@ -164,7 +164,7 @@ async function updateLatestEpisodes() {
         if ((await LatestEpisodeModal.find({
             id: anime.id,
             epId: episode?.latest_episode_id,
-        })).length <= 0)
+        })).length >= 0)
             continue;
         let zoroAnime = await fetchZoroAnimeFromName(anime.name).then((an) => Array.isArray(an?.episodes) ? an?.episodes[an?.episodes?.length - 1] : {});
         console.log("Episode:", anime.name);
