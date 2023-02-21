@@ -226,7 +226,7 @@ async function updateLatestEpisodes() {
           id: anime.id,
           epId: episode?.latest_episode_id,
         })
-      ).length >= 0
+      ).length > 0
     )
       continue;
     let zoroAnime = await fetchZoroAnimeFromName(anime.name).then((an) =>
