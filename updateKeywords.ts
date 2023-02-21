@@ -186,7 +186,7 @@ type anEpisode = {
  */
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
-//getAnimeByNameWithEpisodes(49387).then((r) => console.log(r.episodeVideos[0]));
+//getAnimeByNameWithEpisodes(7786).then((r) => console.log(r.episodeVideos[0]));
 
 mongoose.connection.on("open", async () => {
   //const doc = await AnimeModal.findOne({ id: 343 });
@@ -194,7 +194,6 @@ mongoose.connection.on("open", async () => {
   //return;
   // Updating the animes
   const docs_ = await AnimeModal.find({
-    justInfo: false,
     updated: null,
     mal_id: { $ne: null },
   });
@@ -329,7 +328,7 @@ async function UpdateFull(doc) {
                 number: num,
                 thumbnailUrl: anime.episodeVideos.find(
                   (x) => x.episode.replace("Episode ", "") == num
-                ).images.jpg.image_url,
+                )?.images?.jpg.image_url,
                 urls: doc?.episodes[i]?.urls,
               };
               episodesFinal.push(ep);
