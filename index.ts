@@ -176,14 +176,45 @@ const topAnimeSchema = new Schema({
   genres_en: [T_Schema],
 });
 
+const ScheduleAnimeSchema = new Schema({
+  id: { type: Number, default: null, sparse: true },
+  mal_id: { type: Number, default: null },
+  ani_id: { type: Number, default: null },
+  as_id: { type: Number, default: null },
+  justInfo: { type: Boolean, default: false },
+  adaption: { type: Adaption, default: null },
+
+  name: { type: String, default: null },
+  description_ar: { type: String, default: null },
+  description_en: { type: String, default: null },
+  coverUrl: { type: String, default: null },
+  bannerUr: { type: String, default: null },
+  trailer: { type: String, default: null },
+  source: { type: String, default: null },
+  duration: { type: String, default: null },
+
+  score: { type: Number, default: null },
+  scored_by: { type: Number, default: null },
+  year: { type: Number, default: null },
+
+  type: { type: String, default: null },
+  Rated: { type: String, default: null },
+  season: { type: String, default: null },
+  status: { type: String, default: null },
+
+  genres_ar: [T_Schema],
+  genres_en: [T_Schema],
+  nextEpisode: { type: Number, default: 1 },
+});
+
 const ScheduleSchema = new Schema({
-  Saturday: [AnimeSchema],
-  Sunday: [AnimeSchema],
-  Monday: [AnimeSchema],
-  Tuesday: [AnimeSchema],
-  Wednesday: [AnimeSchema],
-  Thursday: [AnimeSchema],
-  Friday: [AnimeSchema],
+  Saturday: [ScheduleAnimeSchema],
+  Sunday: [ScheduleAnimeSchema],
+  Monday: [ScheduleAnimeSchema],
+  Tuesday: [ScheduleAnimeSchema],
+  Wednesday: [ScheduleAnimeSchema],
+  Thursday: [ScheduleAnimeSchema],
+  Friday: [ScheduleAnimeSchema],
 });
 
 const ScheduleModal = mongoose.model("Schedule", ScheduleSchema);
@@ -218,7 +249,13 @@ async function UpdateSchedule() {
     let animes = [];
     for (const an of ans_animes) {
       const animeDoc = await AnimeModal.findOne({ as_id: an.anime_id });
-      let anime = animeDoc.toJSON();
+      let anime: any = animeDoc.toJSON();
+      if (anime.episodes.length > 0) {
+        anime.nextEpisode =
+          parseInt(anime.episodes[anime.episodes.length - 1].number) + 1;
+      } else {
+        anime.nextEpisode = 1;
+      }
       delete anime.episodes;
       delete anime.recommended;
       delete anime.relations;
@@ -253,6 +290,7 @@ const topAnimeModal = model("topAnime", topAnimeSchema);
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
   updateLatestEpisodes();
+  UpdateSchedule();
   setInterval(() => {
     updateTopAnime();
     UpdateSchedule();
