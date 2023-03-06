@@ -1,15 +1,3 @@
-/* import express from "express";
-import http from "http";
-const app = express();
-const server = http.createServer(app);
-import mongoose from "./src/db/Database";
-import { getAnimeById } from "./src/sources/Manager";
-
-server.listen(3000, () => {
-  getAnimeById(2045);
-  console.log("Server listening on port 3000");
-}); */
-
 import axios, { AxiosError } from "axios";
 import {
   getAnime,
@@ -188,6 +176,56 @@ const topAnimeSchema = new Schema({
   genres_en: [T_Schema],
 });
 
+const ScheduleSchema = new Schema({
+  Saturday: [AnimeSchema],
+  Sunday: [AnimeSchema],
+  Monday: [AnimeSchema],
+  Tuesday: [AnimeSchema],
+  Wednesday: [AnimeSchema],
+  Thursday: [AnimeSchema],
+  Friday: [AnimeSchema],
+});
+
+const ScheduleModal = mongoose.model("Schedule", ScheduleSchema);
+
+async function UpdateSchedule() {
+  console.log("Updating Schedule");
+  const ans_schedule = await axios
+    .get("https://anslayer.com/anime/public/animes/get-published-animes", {
+      params: {
+        json: '{"list_type":"schedule"}',
+      },
+      headers: {
+        "Client-Id": "android-app2",
+        "Client-Secret": "7befba6263cc14c90d2f1d6da2c5cf9b251bfbbd",
+        Accept: "application/json, application/*+json",
+        Connection: "Keep-Alive",
+        "User-Agent": "okhttp/3.12.12",
+      },
+    })
+    .then((response) => response.data.response.data);
+
+  let schedule;
+  const res = await ScheduleModal.find();
+  if (!res || res.length === 0) {
+    schedule = new ScheduleModal();
+  } else {
+    schedule = res[0];
+  }
+  for (const day in ans_schedule) {
+    console.log("Updating day: " + day);
+    let ans_animes = ans_schedule[day];
+    let animes = [];
+    for (const an of ans_animes) {
+      const anime = await AnimeModal.findOne({ as_id: an.anime_id });
+      animes.push(anime);
+    }
+    schedule[day] = animes;
+  }
+
+  await schedule.save();
+}
+
 type zoroEpisode = { epNum: string; episodeName: string; episodeId: string };
 type anEpisode = {
   episode_number: string;
@@ -212,6 +250,7 @@ mongoose.connection.on("open", async () => {
   updateLatestEpisodes();
   setInterval(() => {
     updateTopAnime();
+    UpdateSchedule();
   }, 1000 * 60 * 60 * 24);
 
   setInterval(() => {
