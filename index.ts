@@ -209,7 +209,6 @@ const topAnimeModal = model("topAnime", topAnimeSchema);
 // TODO: 3849 requires update
 // TODO: animes with ani_id: 102416
 mongoose.connection.on("open", async () => {
-  updateTopAnime();
   updateLatestEpisodes();
   setInterval(() => {
     updateTopAnime();
@@ -267,6 +266,42 @@ async function updateLatestEpisodes() {
     });
     await latestEpisode.save();
     await UpdateFull(anime);
+    const animeDoc = await AnimeModal.findOne({ id: anime.id });
+    if (animeDoc) {
+      if (
+        animeDoc.episodes.find(
+          (ep) =>
+            ep.number ==
+            episode.latest_episode_name
+              .replace("الحلقة : ", "")
+              .replace(" - فلر", "")
+        )
+      ) {
+        console.log("Updated-");
+      } else {
+        animeDoc.episodes.push({
+          id: latestEpisode.epId,
+          enId: latestEpisode.epIdEn,
+          number: latestEpisode.epNumber,
+          thumbnailUrl: null,
+          urls: [],
+        });
+        await animeDoc.save().then((e) => {
+          console.log("Updated--");
+        });
+      }
+    } else {
+      animeDoc.episodes.push({
+        id: latestEpisode.epId,
+        enId: latestEpisode.epIdEn,
+        number: latestEpisode.epNumber,
+        thumbnailUrl: null,
+        urls: [],
+      });
+      await animeDoc.save().then((e) => {
+        console.log("Updated---");
+      });
+    }
   }
 }
 
@@ -324,7 +359,7 @@ async function updateTopAnime() {
   }
 }
 
-async function UpdateFull(doc) {
+async function UpdateFull(doc): Promise<any> {
   console.log("Updating:", doc.id);
   await getAnime(doc.as_id)
     .then(async (anime) => {
@@ -467,6 +502,7 @@ async function UpdateFull(doc) {
           });
       }
       await doc.save();
+      return doc;
     })
     .catch((err) => console.log(err.message));
 }
