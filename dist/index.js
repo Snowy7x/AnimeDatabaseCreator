@@ -173,7 +173,12 @@ async function UpdateSchedule() {
         let ans_animes = ans_schedule[day];
         let animes = [];
         for (const an of ans_animes) {
-            const anime = await AnimeModal.findOne({ as_id: an.anime_id });
+            const animeDoc = await AnimeModal.findOne({ as_id: an.anime_id });
+            let anime = animeDoc.toJSON();
+            delete anime.episodes;
+            delete anime.recommended;
+            delete anime.relations;
+            delete anime.studios;
             animes.push(anime);
         }
         schedule[day] = animes;
